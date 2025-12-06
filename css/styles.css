@@ -116,15 +116,14 @@ body {
 }
 
 .toolkit-badge {
-    font-size: 0.7em;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
     background: var(--success-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    position: relative;
-    top: -2px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
 
 .nav-links {
