@@ -481,19 +481,10 @@ body {
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 15px;
     padding-bottom: 15px;
     border-bottom: 3px solid transparent;
     border-image: var(--primary-gradient) 1;
     margin-bottom: 30px;
-}
-
-.category-title svg {
-    width: 32px;
-    height: 32px;
-    color: #667eea;
 }
 
 .tools-grid {
