@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Temporary files
+temp/*
+!temp/.gitkeep
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Migration data
+downloads/
+backups/
+
+# Reports
+reports/*.pdf
+reports/*.json
+!reports/.gitkeep
+
+# Session data
+sessions/

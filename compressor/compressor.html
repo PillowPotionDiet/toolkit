@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP Compression Toggle Compressor (Fixed)</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            flex-grow: 1;
+        }
+
+        #process-btn {
+            background-color: #28a745;
+        }
+
+        #download-all-btn {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        #process-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        #download-all-btn:hover:not(:disabled) {
+            background-color: #e0a800;
+        }
+
+        button:disabled {
+            background-color: #90ee90;
+            cursor: not-allowed;
+            color: #777;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            background-color: #e9ecef;
+        }
+
+        .note {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #6c757d;
+            border-left: 3px solid #ffc107;
+            padding-left: 10px;
+        }
+
+        /* --- File Review Table Styles --- */
+        #review-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        #review-table th,
+        #review-table td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        #review-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .compression-status {
+            font-weight: bold;
+        }
+
+        /* --- Toggle Switch CSS (Standard Component) --- */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        /* End Toggle Switch CSS */
+
+        .file-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .file-status-row:last-child {
+            border-bottom: none;
+        }
+
+        .file-status-row a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🎛️ WebP Compression Toggle Compressor</h1>
+
+        <div class="controls">
+            <p class="note">
+                **Choose your mode:** Use the toggle next to each file to decide whether to **Compress & Convert**
+                (Auto-Quality) or just **Convert** (Lossless/100% Quality).
+            </p>
+
+            <div>
+                <label for="image-files">Select Images (JPEG, PNG, etc.):</label>
+                <input type="file" id="image-files" multiple accept="image/jpeg, image/png, image/webp">
+            </div>
+
+            <div class="action-buttons">
+                <button id="process-btn" disabled>Start Conversion</button>
+                <button id="download-all-btn" disabled>Download All as ZIP</button>
+            </div>
+        </div>
+
+        <div id="output">
+            <h2>File Review & Results:</h2>
+            <p>Select images to begin the process.</p>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('image-files');
+        const processBtn = document.getElementById('process-btn');
+        const downloadAllBtn = document.getElementById('download-all-btn');
+        const outputDiv = document.getElementById('output');
+
+        let convertedFiles = [];
+        let fileMap = new Map(); // Stores File object indexed by unique ID
+
+        // --- Auto-Quality Logic ---
+        function getAutoQuality(file, width, height) {
+            const sizeMB = file.size / (1024 * 1024);
+            let baseQuality = 0.90;
+
+            if (sizeMB > 5) {
+                baseQuality = 0.80;
+            } else if (sizeMB > 1.5) {
+                baseQuality = 0.85;
+            } else if (sizeMB < 0.2) {
+                baseQuality = 0.95;
+            }
+            const type = file.type.toLowerCase();
+            if (type.includes('png')) {
+                baseQuality = Math.min(1.0, baseQuality + 0.05);
+            }
+            return baseQuality;
+        }
+        // --------------------------
+
+        // --- Event Listeners ---
+        fileInput.addEventListener('change', () => {
+            fileMap.clear();
+            convertedFiles = [];
+            processBtn.disabled = fileInput.files.length === 0;
+            downloadAllBtn.disabled = true;
+
+            if (fileInput.files.length > 0) {
+                displayFileReview(fileInput.files);
+            } else {
+                outputDiv.innerHTML = '<h2>File Review & Results:</h2><p>Select images to begin the process.</p>';
+            }
+        });
+
+        processBtn.addEventListener('click', () => {
+            if (fileMap.size === 0) return;
+
+            processBtn.disabled = true;
+            downloadAllBtn.disabled = true;
+            processBtn.textContent = 'Processing... Please wait.';
+
+            // Clear the review table and show processing header
+            outputDiv.innerHTML = '<h2>Conversion Results:</h2>';
+
+            processImages(fileMap);
+        });
+
+        downloadAllBtn.addEventListener('click', async () => {
+            if (convertedFiles.length === 0) return;
+
+            downloadAllBtn.disabled = true;
+            downloadAllBtn.textContent = 'Creating ZIP...';
+
+            const zip = new JSZip();
+            convertedFiles.forEach(file => {
+                zip.file(file.newFilename, file.blob);
+            });
+
+            zip.generateAsync({ type: "blob", compression: "DEFLATE" })
+                .then(function (content) {
+                    saveAs(content, "webP_converted_images.zip");
+
+                    downloadAllBtn.textContent = 'Download All as ZIP';
+                    downloadAllBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error("Error creating ZIP:", error);
+                    alert("Failed to create ZIP file. See console for details.");
+                    downloadAllBtn.textContent = 'Download All as ZIP';
+                    downloadAllBtn.disabled = false;
+                });
+        });
+        // -------------------------
+
+        // --- UI Rendering Functions ---
+        function displayFileReview(files) {
+            let tableHTML = `
+                <h2>File Review & Settings:</h2>
+                <table id="review-table">
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Original Size</th>
+                            <th>Compress?</th>
+                            <th>Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            let index = 0;
+            for (const file of files) {
+                const uniqueId = `file-${index++}`;
+                fileMap.set(uniqueId, file); // Store file with unique ID
+
+                tableHTML += `
+                    <tr id="row-${uniqueId}">
+                        <td>${file.name}</td>
+                        <td>${formatBytes(file.size)}</td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-${uniqueId}" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <span class="compression-status" id="status-${uniqueId}">
+                                Compress & Convert (Auto)
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+            tableHTML += `</tbody></table>`;
+            outputDiv.innerHTML = tableHTML;
+
+            // Add event listeners to update status text
+            for (let i = 0; i < index; i++) {
+                const uniqueId = `file-${i}`;
+                const toggle = document.getElementById(`toggle-${uniqueId}`);
+                const statusSpan = document.getElementById(`status-${uniqueId}`);
+                if (toggle && statusSpan) {
+                    toggle.addEventListener('change', () => {
+                        statusSpan.textContent = toggle.checked
+                            ? 'Compress & Convert (Auto)'
+                            : 'Just Convert (Lossless)';
+                    });
+                }
+            }
+        }
+
+        function displayResult(result) {
+            const reduction = 100 - ((result.newSize / result.originalSize) * 100);
+            const reductionText = reduction.toFixed(2);
+
+            const resultHtml = `
+                <div class="file-status-row">
+                    <span>
+                        <strong>${result.name}</strong> ➡️ ${result.newFilename} (Q:${result.qualityUsed}%)<br>
+                        Original: ${formatBytes(result.originalSize)} | 
+                        New: ${formatBytes(result.newSize)} 
+                        (<span style="color:${reduction > 0 ? 'green' : 'red'};">${reductionText}% ${reduction > 0 ? 'Reduction' : 'Increase'}</span>)
+                    </span>
+                    <a href="${result.blobUrl}" download="${result.newFilename}" title="Download ${result.newFilename}">
+                        ⬇️ Download
+                    </a>
+                </div>
+            `;
+            outputDiv.insertAdjacentHTML('beforeend', resultHtml);
+        }
+
+        function displayError(filename, message) {
+            const errorHtml = `
+                <div class="file-status-row" style="color: red;">
+                    <span>
+                        <strong>${filename}</strong>: ❌ Failed to process.
+                        <br><small>Error: ${message}</small>
+                    </span>
+                    <span></span>
+                </div>
+            `;
+            outputDiv.insertAdjacentHTML('beforeend', errorHtml);
+        }
+
+        // --- Core Processing Functions ---
+
+        /**
+         * Determines the final quality based on the toggle setting.
+         * Includes the fix to prevent 'Cannot read properties of null (reading 'checked')'.
+         */
+        async function getFinalQuality(uniqueId, file) {
+            const toggle = document.getElementById(`toggle-${uniqueId}`);
+
+            // FIX: Graceful check for toggle element existence. Default to compression.
+            const isCompressed = toggle ? toggle.checked : true;
+
+            if (isCompressed) {
+                // Compress & Convert (Auto-Quality)
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            resolve(getAutoQuality(file, img.width, img.height));
+                        };
+                        img.onerror = () => reject(new Error('Failed to load image dimensions.'));
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                // Just Convert (Lossless/100% Quality)
+                return 1.0;
+            }
+        }
+
+        /**
+         * Converts a single image file to WebP with the specified quality.
+         */
+        function compressToWebP(file, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    return reject(new Error('Failed to create WebP blob.'));
+                                }
+
+                                const originalFilename = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                                const newFilename = `${originalFilename}.webp`;
+
+                                resolve({
+                                    name: file.name,
+                                    newFilename: newFilename,
+                                    originalSize: file.size,
+                                    newSize: blob.size,
+                                    qualityUsed: Math.round(quality * 100),
+                                    blobUrl: URL.createObjectURL(blob),
+                                    blob: blob
+                                });
+                            }, `image/webp`, quality);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image for processing.'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        /**
+         * Processes all selected images in bulk, respecting the user's toggle setting.
+         */
+        async function processImages(fileMap) {
+            convertedFiles = [];
+
+            // Iterate over the stored file map
+            for (const [uniqueId, file] of fileMap.entries()) {
+                try {
+                    // 1. Determine the quality based on the toggle switch (using the fixed function)
+                    const quality = await getFinalQuality(uniqueId, file);
+
+                    // 2. Perform the conversion
+                    const result = await compressToWebP(file, quality);
+
+                    convertedFiles.push(result);
+                    displayResult(result);
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    displayError(file.name, error.message);
+                }
+            }
+
+            processBtn.textContent = 'Start Conversion';
+            processBtn.disabled = false;
+            if (convertedFiles.length > 0) {
+                downloadAllBtn.disabled = false;
+            }
+        }
+
+        // --- Utility ---
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+    </script>
+
+</body>
+
+</html>

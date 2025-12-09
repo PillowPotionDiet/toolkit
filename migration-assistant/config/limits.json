@@ -1,0 +1,89 @@
+{
+  "fileSizes": {
+    "maxSiteSize": 5368709120,
+    "maxChunkSize": 104857600,
+    "warningSiteSize": 2147483648,
+    "maxEmailAttachment": 52428800
+  },
+  "rateLimits": {
+    "cpanel": {
+      "requestsPerMinute": 60,
+      "requestsPerHour": 3000,
+      "concurrentConnections": 5,
+      "retryAttempts": 3,
+      "retryDelay": 1000,
+      "maxRetryDelay": 15000
+    },
+    "plesk": {
+      "requestsPerMinute": 50,
+      "requestsPerHour": 2500,
+      "concurrentConnections": 4,
+      "retryAttempts": 3,
+      "retryDelay": 1000,
+      "maxRetryDelay": 15000
+    },
+    "cloudways": {
+      "requestsPerMinute": 30,
+      "requestsPerHour": 1500,
+      "concurrentConnections": 3,
+      "retryAttempts": 3,
+      "retryDelay": 2000,
+      "maxRetryDelay": 20000
+    },
+    "directadmin": {
+      "requestsPerMinute": 40,
+      "requestsPerHour": 2000,
+      "concurrentConnections": 3,
+      "retryAttempts": 3,
+      "retryDelay": 1500,
+      "maxRetryDelay": 15000
+    }
+  },
+  "timeouts": {
+    "connection": 30000,
+    "fileDownload": 600000,
+    "fileUpload": 600000,
+    "databaseExport": 300000,
+    "databaseImport": 300000,
+    "apiRequest": 60000
+  },
+  "providerLimits": {
+    "hostinger": {
+      "maxEmailAccounts": 100,
+      "maxDatabases": 100,
+      "maxSubdomains": 100,
+      "diskSpace": "varies by plan"
+    },
+    "bluehost": {
+      "maxEmailAccounts": "unlimited",
+      "maxDatabases": "unlimited",
+      "maxSubdomains": "unlimited",
+      "diskSpace": "varies by plan"
+    },
+    "siteground": {
+      "maxEmailAccounts": "unlimited",
+      "maxDatabases": "unlimited",
+      "maxSubdomains": "unlimited",
+      "diskSpace": "varies by plan"
+    },
+    "godaddy": {
+      "maxEmailAccounts": "varies by plan",
+      "maxDatabases": 25,
+      "maxSubdomains": 25,
+      "diskSpace": "varies by plan"
+    },
+    "hostgator": {
+      "maxEmailAccounts": "unlimited",
+      "maxDatabases": "unlimited",
+      "maxSubdomains": "unlimited",
+      "diskSpace": "varies by plan"
+    }
+  },
+  "migration": {
+    "maxConcurrentSites": 1,
+    "maxConcurrentEmailAccounts": 10,
+    "sessionTimeout": 3600000,
+    "progressUpdateInterval": 1000,
+    "autoSaveInterval": 30000
+  }
+}

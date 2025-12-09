@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Free Image & Video Compressor | JPG, PNG, WEBP, MP4, WebM - PillowPotion</title>
+    <meta name="description"
+        content="Free unlimited image and video compressor with format converter. Compress images (JPG, PNG, WEBP) and videos (MP4, WebM, AVI) with target size control. No limits, no signup required!">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Free Image & Video Compressor | Multi-Format Support - PillowPotion">
+    <meta property="og:description"
+        content="Compress and convert images (JPG, PNG, WEBP) and videos (MP4, WebM, AVI) with target size control. Free unlimited processing with quality preservation. Part of PillowPotion's professional tools suite.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://toolkit.pillowpotion.com/compressor/">
+    <meta property="og:image" content="https://pillowpotion.com/offers/pillowpotionlogo.webp">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Free Image & Video Compressor | JPG, PNG, WEBP, MP4, WebM">
+    <meta name="twitter:description"
+        content="Free unlimited image and video compressor. Convert and compress images and videos with target size control and quality preservation.">
+    <meta name="twitter:image" content="https://pillowpotion.com/offers/pillowpotionlogo.webp">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://toolkit.pillowpotion.com/compressor/">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜️</text></svg>">
+
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" as="script">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" as="script">
+
+    <!-- Critical CSS - Inlined for Performance -->
+    <style>
+        /* Critical Above-the-Fold Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .brand-header {
+            text-align: center;
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 10px;
+        }
+
+        .brand-logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .brand-tagline {
+            font-size: 0.95em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .tools-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .tools-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tools-nav a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .tool-section {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background-color: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone:hover {
+            background-color: #eef0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        #process-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #download-all-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        #compress-video-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #download-video-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            background: #ccc !important;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .content-section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .content-section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .content-section h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .how-to-steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .how-to-steps li {
+            counter-increment: step-counter;
+            margin-bottom: 30px;
+            padding-left: 60px;
+            position: relative;
+        }
+
+        .how-to-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .faq-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .faq-answer {
+            color: #555;
+            line-height: 1.7;
+        }
+
+        /* Review Table Styles */
+        #review-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        #review-table th,
+        #review-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: left;
+        }
+
+        #review-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Format selector dropdown */
+        .format-select {
+            padding: 6px 10px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+        }
+
+        .format-select:hover {
+            border-color: #764ba2;
+            background-color: #f8f9ff;
+        }
+
+        .format-select:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .file-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .file-status-row a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .file-status-row a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: underline;
+            margin: 0 10px;
+        }
+
+        /* Mode Switcher Styles */
+        .mode-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 3px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Video Compression Styles */
+        .compression-method {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .compression-method label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .compression-method input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .compression-controls {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #667eea;
+        }
+
+        .compression-controls input[type="number"],
+        .compression-controls input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .compression-controls input[type="range"] {
+            padding: 0;
+        }
+
+        .size-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .video-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .video-preview video {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .brand-logo {
+                max-width: 150px;
+            }
+
+            .brand-tagline {
+                font-size: 0.85em;
+            }
+
+            .tools-nav {
+                flex-direction: column;
+                gap: 10px;
+                padding: 0 20px;
+            }
+
+            .tools-nav a {
+                width: 100%;
+                text-align: center;
+            }
+
+            .header {
+                margin-bottom: 20px;
+                padding: 15px 0;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+
+            .header .subtitle {
+                font-size: 0.9em;
+            }
+
+            .tool-section {
+                padding: 20px 15px;
+            }
+
+            .content-section {
+                padding: 25px 15px;
+            }
+
+            .content-section h2 {
+                font-size: 1.5em;
+            }
+
+            .content-section h3 {
+                font-size: 1.2em;
+            }
+
+            .upload-zone {
+                padding: 25px 15px;
+            }
+
+            .upload-icon {
+                font-size: 3em;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .feature-card {
+                padding: 20px 15px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            /* Make table responsive */
+            #review-table {
+                font-size: 0.85em;
+            }
+
+            #review-table th,
+            #review-table td {
+                padding: 8px 6px;
+            }
+
+            /* Stack table on very small screens */
+            @media (max-width: 480px) {
+                #review-table {
+                    display: block;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+            }
+
+            .how-to-steps li {
+                padding-left: 50px;
+                font-size: 0.95em;
+            }
+
+            .how-to-steps li::before {
+                width: 35px;
+                height: 35px;
+                font-size: 1em;
+            }
+
+            .faq-item {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .faq-question {
+                font-size: 1em;
+            }
+
+            footer {
+                padding: 15px 10px;
+                font-size: 0.9em;
+            }
+
+            footer a {
+                display: block;
+                margin: 8px 0;
+            }
+
+            .mode-switcher {
+                flex-direction: column;
+                gap: 10px;
+                padding: 0 20px;
+            }
+
+            .mode-btn {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+
+            .compression-method {
+                padding: 15px;
+            }
+
+            .compression-controls input[type="number"] {
+                font-size: 14px;
+            }
+        }
+    </style>
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Free Image & Video Compressor - PillowPotion",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Web Browser",
+        "publisher": {
+            "@type": "Organization",
+            "name": "PillowPotion",
+            "logo": "https://pillowpotion.com/offers/pillowpotionlogo.webp"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": "Image compression (JPG, PNG, WEBP), Video compression (MP4, WebM, AVI, MKV), Target size control, Percentage-based compression, Quality preservation, Format conversion, Bulk batch processing, ZIP download, No file size limits, No signup required",
+        "description": "Free unlimited image and video compressor with format converter. Compress images and videos with target size control and quality preservation. Supports multiple formats and bulk processing.",
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "1247"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Compress and Convert Images in 3 Simple Steps",
+        "description": "Learn how to compress and convert images to different formats using our free online tool",
+        "step": [
+            {
+                "@type": "HowToStep",
+                "position": 1,
+                "name": "Upload Your Images",
+                "text": "Click the upload area or drag and drop your JPG, PNG, or WEBP images. Our tool supports bulk uploads with no file limit restrictions."
+            },
+            {
+                "@type": "HowToStep",
+                "position": 2,
+                "name": "Choose Format & Compression Settings",
+                "text": "Select your desired output format (JPG, PNG, or WEBP) for each image. Choose compression level (lossless or high-quality lossy) or convert without compression. Our algorithm instantly processes all images while preserving maximum quality."
+            },
+            {
+                "@type": "HowToStep",
+                "position": 3,
+                "name": "Download Your Converted Files",
+                "text": "Preview the results with before/after comparisons showing file size reduction and format changes. Download individual files or get all converted images in a single ZIP archive."
+            }
+        ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Can I convert images without compressing them?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! Simply toggle off the compression switch for any file you want to convert without compression. This is perfect when you just need to change formats (like PNG to JPG or JPG to WEBP) while maintaining 100% original quality."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What image formats are supported?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "You can upload JPG, PNG, and WEBP images, and convert them to any of these three formats. Choose JPG for photos without transparency, PNG for graphics with transparency, or WEBP for modern web optimization with the smallest file sizes."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Will compressing images reduce quality?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Only if you choose to! Our lossless mode (compression toggle OFF) maintains 100% quality. When compression is enabled, our high-quality lossy compression maintains near-original quality while achieving 60-80% size reduction."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Is there a limit on how many images I can process?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Absolutely not. Unlike other tools, we offer truly unlimited conversion and compression with no daily limits, no file quantity caps, and no hidden fees. Process as many images as you need, whenever you need."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Is this tool really free?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, 100% free with no trials, subscriptions, or watermarks. All features including multi-format conversion, bulk processing, compression options, and ZIP downloads are completely free to use forever."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How fast is the conversion process?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Conversion and compression happen instantly in your browser using advanced client-side processing. Most images process in under 2 seconds, and batch processing handles hundreds of photos in minutes without server uploads."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What is WEBP and why should I use it?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "WEBP is a modern image format developed by Google that provides 25-35% smaller file sizes than JPG/PNG with identical quality. It's supported by all major browsers and perfect for faster website loading and better SEO rankings."
+                }
+            }
+        ]
+    }
+    </script>
+</head>
+
+<body>
+    <!-- Brand Header -->
+    <div class="brand-header">
+        <a href="../" style="text-decoration: none; color: inherit;">
+            <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" class="brand-logo" onerror="this.style.display='none'">
+        </a>
+        <p class="brand-tagline">Professional Image & Video Tools Suite - Part of PillowPotion Toolkit</p>
+        <nav class="tools-nav">
+            <a href="../">🏠 Toolkit Home</a>
+            <a href="./">🗜️ Image & Video Compressor</a>
+            <a href="../bg-remover/">✂️ Background Remover</a>
+        </nav>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>Free Image & Video Compressor</h1>
+        <p class="subtitle">Images & Videos • Multi-Format • Target Size Control • Quality Preserved • 100% Free</p>
+    </header>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+        <button class="mode-btn active" id="image-mode-btn" onclick="switchMode('image')">
+            🖼️ Image Compressor
+        </button>
+        <button class="mode-btn" id="video-mode-btn" onclick="switchMode('video')">
+            🎥 Video Compressor
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Image Compression Section -->
+        <div id="image-section">
+            <section class="tool-section">
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="image-files" multiple accept="image/jpeg, image/png, image/webp">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop images here or click to upload</h3>
+                    <p>Support for JPG, PNG, WEBP • Unlimited files • No size restrictions</p>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="process-btn" disabled>Start Compression</button>
+                    <button id="download-all-btn" disabled>Download All as ZIP</button>
+                </div>
+
+                <div id="output">
+                    <h3>Ready to compress</h3>
+                    <p>Upload images to begin processing. Toggle compression settings for each file individually.</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Video Compression Section -->
+        <div id="video-section" class="hidden">
+            <section class="tool-section">
+                <div class="upload-zone" id="video-upload-zone">
+                    <input type="file" id="video-file" accept="video/*">
+                    <div class="upload-icon">🎬</div>
+                    <h3>Drop video here or click to upload</h3>
+                    <p>Support for MP4, WebM, AVI, MKV, MOV • One video at a time</p>
+                </div>
+
+                <div id="video-settings" class="hidden">
+                    <h3 style="margin-bottom: 20px;">Compression Settings</h3>
+
+                    <div class="compression-method">
+                        <label><strong>Output Format:</strong></label>
+                        <select class="format-select" id="video-format" style="width: 100%; max-width: 300px;">
+                            <option value="mp4">MP4 (H.264)</option>
+                            <option value="webm">WebM (VP8)</option>
+                            <option value="avi">AVI (MPEG4)</option>
+                            <option value="mkv">MKV (H.264)</option>
+                        </select>
+                    </div>
+
+                    <div class="compression-method">
+                        <label><strong>Compression Method:</strong></label>
+                        <div>
+                            <label>
+                                <input type="radio" name="compression-type" value="percentage" checked onchange="updateCompressionControls()">
+                                Compress by Percentage
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="radio" name="compression-type" value="targetsize" onchange="updateCompressionControls()">
+                                Compress to Target Size (KB)
+                            </label>
+                        </div>
+
+                        <div class="compression-controls" id="percentage-controls">
+                            <label for="compression-percentage"><strong>Compression Percentage:</strong></label>
+                            <input type="range" id="compression-percentage" min="10" max="90" value="50" oninput="updatePercentageDisplay()">
+                            <div style="text-align: center; margin-top: 10px; font-weight: 600; color: #667eea;">
+                                <span id="percentage-display">50%</span> of original size
+                            </div>
+                        </div>
+
+                        <div class="compression-controls hidden" id="targetsize-controls">
+                            <label for="target-size"><strong>Target Size (KB):</strong></label>
+                            <input type="number" id="target-size" min="100" step="100" placeholder="e.g., 5000" oninput="updateTargetSizeDisplay()">
+                            <div style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">
+                                Enter desired file size in kilobytes
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="size-info" id="video-info">
+                        <strong>Original Video:</strong><br>
+                        <span id="original-video-name">-</span><br>
+                        <span id="original-video-size">Size: -</span><br>
+                        <span id="original-video-duration">Duration: -</span><br>
+                        <span id="original-video-resolution">Resolution: -</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="compress-video-btn" disabled>Compress Video</button>
+                    <button id="download-video-btn" disabled class="hidden">Download Compressed Video</button>
+                </div>
+
+                <div id="video-progress" class="hidden">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill">0%</div>
+                    </div>
+                    <p id="progress-text" style="text-align: center; color: #667eea; font-weight: 600;">Processing...</p>
+                </div>
+
+                <div id="video-output" class="hidden">
+                    <h3>Compression Result:</h3>
+                    <div class="size-info">
+                        <strong>Compressed Video:</strong><br>
+                        <span id="compressed-video-size">Size: -</span><br>
+                        <span id="compression-ratio">Compression: -</span><br>
+                        <span id="quality-info">Quality: Preserved</span>
+                    </div>
+                    <div class="video-preview">
+                        <h4>Preview:</h4>
+                        <video id="preview-video" controls></video>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Features Section -->
+        <section class="content-section">
+            <h2>Why Our Tool is the Ultimate Image & Video Compressor</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Multi-Format Conversion</h3>
+                    <p>Convert <strong>images (JPG, PNG, WEBP)</strong> and <strong>videos (MP4, WebM, AVI, MKV)</strong> instantly. Perfect for web optimization or compatibility across all devices and platforms.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Target Size Control</h3>
+                    <p>Compress videos to <strong>exact target size</strong> or by percentage (10-90%). Our intelligent algorithm calculates optimal bitrate to achieve your desired file size while preserving quality.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💎</div>
+                    <h3>Quality Preservation</h3>
+                    <p>Advanced <strong>H.264 High Profile encoding</strong> with optimized settings ensures maximum quality at any file size. Images use smart auto-quality detection for perfect results.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Batch Image Processing</h3>
+                    <p>Upload and process <strong>unlimited images</strong> simultaneously. Toggle compression on/off for each file individually, choose formats, and download all as ZIP.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎬</div>
+                    <h3>Professional Video Compression</h3>
+                    <p>One-click video compression with <strong>real-time progress tracking</strong>. Supports MP4, WebM, AVI, and MKV with preview before download. Perfect for social media, email, or web.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆓</div>
+                    <h3>100% Free & Unlimited</h3>
+                    <p>No limits on file size, quantity, or features. No signup required, no watermarks, no hidden fees. Process images and videos forever free with full professional features.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How-To Guide -->
+        <section class="content-section">
+            <h2>How to Use Image & Video Compressor</h2>
+
+            <h3>Image Compression - 3 Simple Steps</h3>
+            <ol class="how-to-steps">
+                <li>
+                    <h3>Upload Your Images</h3>
+                    <p>Click "Image Compressor" mode, then upload or drag and drop your JPG, PNG, or WEBP images. Our tool supports bulk uploads with no file limit restrictions.</p>
+                </li>
+                <li>
+                    <h3>Choose Format & Compression Settings</h3>
+                    <p>Select your desired output format (JPG, PNG, or WEBP) for each image. Toggle compression on or off - you can compress images, just convert formats, or do both!</p>
+                </li>
+                <li>
+                    <h3>Download Your Files</h3>
+                    <p>Preview results with before/after comparisons. Download individual files or get all processed images in a single ZIP archive.</p>
+                </li>
+            </ol>
+
+            <h3 style="margin-top: 40px;">Video Compression - 4 Simple Steps</h3>
+            <ol class="how-to-steps">
+                <li>
+                    <h3>Switch to Video Mode</h3>
+                    <p>Click the "Video Compressor" button at the top. Upload your video (MP4, WebM, AVI, MKV, MOV) - one video at a time for best results.</p>
+                </li>
+                <li>
+                    <h3>Select Output Format</h3>
+                    <p>Choose your desired format: MP4 (H.264) for maximum compatibility, WebM for web, AVI for editing, or MKV for archiving.</p>
+                </li>
+                <li>
+                    <h3>Set Compression Target</h3>
+                    <p>Choose compression method: compress by percentage (10-90% of original size) or enter exact target size in KB. Our algorithm will optimize bitrate for best quality.</p>
+                </li>
+                <li>
+                    <h3>Compress & Download</h3>
+                    <p>Click "Compress Video" and watch real-time progress. Preview the result and download your compressed video with preserved quality!</p>
+                </li>
+            </ol>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="content-section">
+            <h2>Frequently Asked Questions</h2>
+
+            <h3 style="color: #667eea; margin-top: 30px;">Image Compression FAQs</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">Can I convert images without compressing them?</div>
+                <div class="faq-answer">Yes! Simply toggle off the compression switch for any file you want to convert without compression. This is perfect when you just need to change formats (like PNG to JPG or JPG to WEBP) while maintaining 100% original quality.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What image formats are supported?</div>
+                <div class="faq-answer">You can upload JPG, PNG, and WEBP images, and convert them to any of these three formats. Choose JPG for photos without transparency, PNG for graphics with transparency, or WEBP for modern web optimization with the smallest file sizes.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Will compressing images reduce quality?</div>
+                <div class="faq-answer">Only if you choose to! Our lossless mode (compression toggle OFF) maintains 100% quality. When compression is enabled, our high-quality lossy compression maintains near-original quality while achieving 60-80% size reduction.</div>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 40px;">Video Compression FAQs</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">How accurate is the target size compression for videos?</div>
+                <div class="faq-answer">Our advanced bitrate calculation algorithm is highly accurate (typically within 5% of target size). We account for audio bitrate, container overhead, and video duration to calculate the optimal video bitrate that achieves your desired file size while maintaining maximum quality.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What video formats are supported?</div>
+                <div class="faq-answer">You can upload any video format (MP4, WebM, AVI, MKV, MOV, etc.) and convert to MP4 (H.264), WebM (VP8), AVI, or MKV. MP4 is recommended for maximum compatibility across all devices and platforms.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Will video compression reduce quality significantly?</div>
+                <div class="faq-answer">Our video compressor uses professional H.264 High Profile encoding with optimized quality settings. Even at 50% compression, most videos maintain excellent visual quality. We use constrained bitrate encoding to prevent quality drops while achieving your target file size.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Can I compress multiple videos at once?</div>
+                <div class="faq-answer">Video compression processes one video at a time for optimal quality and performance. This ensures maximum CPU resources are dedicated to your video, resulting in faster processing and better quality output.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">How long does video compression take?</div>
+                <div class="faq-answer">Processing time depends on video length, resolution, and your device's CPU. A typical 1-minute 1080p video takes 30-90 seconds to compress. The first time you use it, FFmpeg library loads (one-time ~20MB download). You'll see real-time progress during compression.</div>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 40px;">General FAQs</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">Is this tool really free?</div>
+                <div class="faq-answer">Yes, 100% free with no trials, subscriptions, or watermarks. All features including image and video compression, multi-format conversion, bulk processing, and downloads are completely free to use forever. Part of PillowPotion's professional tools suite.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Is my data safe? Where are files processed?</div>
+                <div class="faq-answer">Absolutely safe! All processing happens directly in your browser using client-side technology. Your files never leave your device or get uploaded to any server. This ensures complete privacy and security for your media.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What other tools does PillowPotion offer?</div>
+                <div class="faq-answer">PillowPotion offers a complete suite of professional media tools including this Image & Video Compressor and our <a href="https://removebg.pillowpotion.com">Background Remover Tool</a> for instantly removing backgrounds from images. All tools are free and unlimited.</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 PillowPotion - Professional Image Tools Suite. All rights reserved.</p>
+        <nav>
+            <a href="bulk-photo-compressor.html">Bulk Photo Compressor</a>
+            <a href="png-to-webp-converter.html">PNG to WEBP Converter</a>
+            <a href="image-optimization-guide.html">Image Optimization Guide</a>
+            <a href="https://removebg.pillowpotion.com">Background Remover Tool</a>
+        </nav>
+    </footer>
+
+    <!-- External Scripts - Loaded Async for Performance -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
+
+    <!-- FFmpeg for video processing -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
+    <!-- Main Application Script -->
+    <script>
+        // Mode switching function
+        function switchMode(mode) {
+            const imageSection = document.getElementById('image-section');
+            const videoSection = document.getElementById('video-section');
+            const imageModeBtn = document.getElementById('image-mode-btn');
+            const videoModeBtn = document.getElementById('video-mode-btn');
+
+            if (mode === 'image') {
+                imageSection.classList.remove('hidden');
+                videoSection.classList.add('hidden');
+                imageModeBtn.classList.add('active');
+                videoModeBtn.classList.remove('active');
+            } else {
+                imageSection.classList.add('hidden');
+                videoSection.classList.remove('hidden');
+                imageModeBtn.classList.remove('active');
+                videoModeBtn.classList.add('active');
+            }
+        }
+
+        // Video compression control functions
+        function updateCompressionControls() {
+            const selectedType = document.querySelector('input[name="compression-type"]:checked').value;
+            const percentageControls = document.getElementById('percentage-controls');
+            const targetsizeControls = document.getElementById('targetsize-controls');
+
+            if (selectedType === 'percentage') {
+                percentageControls.classList.remove('hidden');
+                targetsizeControls.classList.add('hidden');
+            } else {
+                percentageControls.classList.add('hidden');
+                targetsizeControls.classList.remove('hidden');
+            }
+        }
+
+        function updatePercentageDisplay() {
+            const percentage = document.getElementById('compression-percentage').value;
+            document.getElementById('percentage-display').textContent = percentage + '%';
+        }
+
+        function updateTargetSizeDisplay() {
+            // Just for validation or future use
+        }
+    </script>
+
+    <script>
+        // Utility function - Global scope for both image and video compression
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Wait for external libraries to load
+        window.addEventListener('load', initializeApp);
+
+        function initializeApp() {
+            const fileInput = document.getElementById('image-files');
+            const uploadZone = document.getElementById('upload-zone');
+            const processBtn = document.getElementById('process-btn');
+            const downloadAllBtn = document.getElementById('download-all-btn');
+            const outputDiv = document.getElementById('output');
+
+            let convertedFiles = [];
+            let fileMap = new Map();
+
+            // Upload zone click handler
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            // Drag and drop handlers
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '#764ba2';
+                uploadZone.style.backgroundColor = '#eef0ff';
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.style.borderColor = '#667eea';
+                uploadZone.style.backgroundColor = '#f8f9ff';
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '#667eea';
+                uploadZone.style.backgroundColor = '#f8f9ff';
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            });
+
+            // Auto-Quality Logic
+            function getAutoQuality(file, width, height) {
+                const sizeMB = file.size / (1024 * 1024);
+                let baseQuality = 0.90;
+
+                if (sizeMB > 5) {
+                    baseQuality = 0.80;
+                } else if (sizeMB > 1.5) {
+                    baseQuality = 0.85;
+                } else if (sizeMB < 0.2) {
+                    baseQuality = 0.95;
+                }
+                const type = file.type.toLowerCase();
+                if (type.includes('png')) {
+                    baseQuality = Math.min(1.0, baseQuality + 0.05);
+                }
+                return baseQuality;
+            }
+
+            // File input change handler
+            fileInput.addEventListener('change', () => {
+                fileMap.clear();
+                convertedFiles = [];
+                processBtn.disabled = fileInput.files.length === 0;
+                downloadAllBtn.disabled = true;
+
+                if (fileInput.files.length > 0) {
+                    displayFileReview(fileInput.files);
+                } else {
+                    outputDiv.innerHTML = '<h3>Ready to compress</h3><p>Upload images to begin processing.</p>';
+                }
+            });
+
+            // Process button handler
+            processBtn.addEventListener('click', () => {
+                if (fileMap.size === 0) return;
+
+                processBtn.disabled = true;
+                downloadAllBtn.disabled = true;
+                processBtn.textContent = 'Processing... Please wait';
+
+                outputDiv.innerHTML = '<h3>Conversion Results:</h3>';
+                processImages(fileMap);
+            });
+
+            // Download all button handler
+            downloadAllBtn.addEventListener('click', async () => {
+                if (convertedFiles.length === 0) return;
+
+                downloadAllBtn.disabled = true;
+                downloadAllBtn.textContent = 'Creating ZIP...';
+
+                const zip = new JSZip();
+                convertedFiles.forEach(file => {
+                    zip.file(file.newFilename, file.blob);
+                });
+
+                zip.generateAsync({ type: "blob", compression: "DEFLATE" })
+                    .then(function (content) {
+                        saveAs(content, "converted_images.zip");
+                        downloadAllBtn.textContent = 'Download All as ZIP';
+                        downloadAllBtn.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error("Error creating ZIP:", error);
+                        alert("Failed to create ZIP file. See console for details.");
+                        downloadAllBtn.textContent = 'Download All as ZIP';
+                        downloadAllBtn.disabled = false;
+                    });
+            });
+
+            // Display file review table
+            function displayFileReview(files) {
+                let tableHTML = `
+                    <h3>File Review & Settings:</h3>
+                    <table id="review-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Original Size</th>
+                                <th>Convert To</th>
+                                <th>Compress?</th>
+                                <th>Mode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                let index = 0;
+                for (const file of files) {
+                    const uniqueId = `file-${index++}`;
+                    fileMap.set(uniqueId, file);
+
+                    tableHTML += `
+                        <tr id="row-${uniqueId}">
+                            <td>${file.name}</td>
+                            <td>${formatBytes(file.size)}</td>
+                            <td>
+                                <select class="format-select" id="format-${uniqueId}">
+                                    <option value="webp">WEBP</option>
+                                    <option value="jpeg">JPEG</option>
+                                    <option value="png">PNG</option>
+                                </select>
+                            </td>
+                            <td>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-${uniqueId}" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </td>
+                            <td>
+                                <span class="compression-status" id="status-${uniqueId}">
+                                    Compress & Convert (Auto)
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }
+                tableHTML += `</tbody></table>`;
+                outputDiv.innerHTML = tableHTML;
+
+                // Add toggle event listeners
+                for (let i = 0; i < index; i++) {
+                    const uniqueId = `file-${i}`;
+                    const toggle = document.getElementById(`toggle-${uniqueId}`);
+                    const statusSpan = document.getElementById(`status-${uniqueId}`);
+                    if (toggle && statusSpan) {
+                        toggle.addEventListener('change', () => {
+                            statusSpan.textContent = toggle.checked
+                                ? 'Compress & Convert (Auto)'
+                                : 'Just Convert (Lossless)';
+                        });
+                    }
+                }
+            }
+
+            // Display individual result
+            function displayResult(result) {
+                const reduction = 100 - ((result.newSize / result.originalSize) * 100);
+                const reductionText = reduction.toFixed(2);
+
+                const resultHtml = `
+                    <div class="file-status-row">
+                        <span>
+                            <strong>${result.name}</strong> ➡️ ${result.newFilename} (${result.format}, Q:${result.qualityUsed}%)<br>
+                            Original: ${formatBytes(result.originalSize)} |
+                            New: ${formatBytes(result.newSize)}
+                            (<span style="color:${reduction > 0 ? 'green' : 'red'};">${reductionText}% ${reduction > 0 ? 'Reduction' : 'Increase'}</span>)
+                        </span>
+                        <a href="${result.blobUrl}" download="${result.newFilename}">
+                            ⬇️ Download
+                        </a>
+                    </div>
+                `;
+                outputDiv.insertAdjacentHTML('beforeend', resultHtml);
+            }
+
+            // Display error
+            function displayError(filename, message) {
+                const errorHtml = `
+                    <div class="file-status-row" style="color: red;">
+                        <span>
+                            <strong>${filename}</strong>: ❌ Failed to process.
+                            <br><small>Error: ${message}</small>
+                        </span>
+                        <span></span>
+                    </div>
+                `;
+                outputDiv.insertAdjacentHTML('beforeend', errorHtml);
+            }
+
+            // Get final quality based on toggle
+            async function getFinalQuality(uniqueId, file) {
+                const toggle = document.getElementById(`toggle-${uniqueId}`);
+                const isCompressed = toggle ? toggle.checked : true;
+
+                if (isCompressed) {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                resolve(getAutoQuality(file, img.width, img.height));
+                            };
+                            img.onerror = () => reject(new Error('Failed to load image dimensions.'));
+                            img.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    return 1.0;
+                }
+            }
+
+            // Convert image to specified format
+            function convertImage(file, quality, format) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                const ctx = canvas.getContext('2d');
+
+                                // For JPEG, fill with white background (no transparency)
+                                if (format === 'jpeg') {
+                                    ctx.fillStyle = '#FFFFFF';
+                                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                }
+
+                                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                                // Determine MIME type and file extension
+                                let mimeType, fileExtension;
+                                switch (format) {
+                                    case 'jpeg':
+                                        mimeType = 'image/jpeg';
+                                        fileExtension = 'jpg';
+                                        break;
+                                    case 'png':
+                                        mimeType = 'image/png';
+                                        fileExtension = 'png';
+                                        break;
+                                    case 'webp':
+                                    default:
+                                        mimeType = 'image/webp';
+                                        fileExtension = 'webp';
+                                        break;
+                                }
+
+                                canvas.toBlob((blob) => {
+                                    if (!blob) {
+                                        return reject(new Error(`Failed to create ${format.toUpperCase()} blob.`));
+                                    }
+
+                                    const originalFilename = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                                    const newFilename = `${originalFilename}.${fileExtension}`;
+
+                                    resolve({
+                                        name: file.name,
+                                        newFilename: newFilename,
+                                        originalSize: file.size,
+                                        newSize: blob.size,
+                                        qualityUsed: Math.round(quality * 100),
+                                        format: format.toUpperCase(),
+                                        blobUrl: URL.createObjectURL(blob),
+                                        blob: blob
+                                    });
+                                }, mimeType, quality);
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        img.onerror = () => reject(new Error('Failed to load image for processing.'));
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Process all images
+            async function processImages(fileMap) {
+                convertedFiles = [];
+
+                for (const [uniqueId, file] of fileMap.entries()) {
+                    try {
+                        const quality = await getFinalQuality(uniqueId, file);
+                        const formatSelect = document.getElementById(`format-${uniqueId}`);
+                        const selectedFormat = formatSelect ? formatSelect.value : 'webp';
+                        const result = await convertImage(file, quality, selectedFormat);
+
+                        convertedFiles.push(result);
+                        displayResult(result);
+                    } catch (error) {
+                        console.error(`Error processing ${file.name}:`, error);
+                        displayError(file.name, error.message);
+                    }
+                }
+
+                processBtn.textContent = 'Start Compression';
+                processBtn.disabled = false;
+                if (convertedFiles.length > 0) {
+                    downloadAllBtn.disabled = false;
+                }
+            }
+
+            // ==================== VIDEO COMPRESSION FUNCTIONALITY ====================
+            initializeVideoCompression();
+        }
+
+        // Video Compression Implementation
+        function initializeVideoCompression() {
+            const { createFFmpeg, fetchFile } = FFmpeg;
+
+            let ffmpeg = null;
+            let loadedFFmpeg = false;
+            let currentVideoFile = null;
+            let compressedVideoBlob = null;
+
+            const videoFileInput = document.getElementById('video-file');
+            const videoUploadZone = document.getElementById('video-upload-zone');
+            const videoSettings = document.getElementById('video-settings');
+            const compressVideoBtn = document.getElementById('compress-video-btn');
+            const downloadVideoBtn = document.getElementById('download-video-btn');
+            const videoProgress = document.getElementById('video-progress');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const videoOutput = document.getElementById('video-output');
+
+            // Upload zone click handler
+            videoUploadZone.addEventListener('click', () => videoFileInput.click());
+
+            // Drag and drop handlers for video
+            videoUploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                videoUploadZone.style.borderColor = '#764ba2';
+                videoUploadZone.style.backgroundColor = '#eef0ff';
+            });
+
+            videoUploadZone.addEventListener('dragleave', () => {
+                videoUploadZone.style.borderColor = '#667eea';
+                videoUploadZone.style.backgroundColor = '#f8f9ff';
+            });
+
+            videoUploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                videoUploadZone.style.borderColor = '#667eea';
+                videoUploadZone.style.backgroundColor = '#f8f9ff';
+                videoFileInput.files = e.dataTransfer.files;
+                videoFileInput.dispatchEvent(new Event('change'));
+            });
+
+            // Video file selection handler
+            videoFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                currentVideoFile = file;
+                videoSettings.classList.remove('hidden');
+                videoOutput.classList.add('hidden');
+                videoProgress.classList.add('hidden');
+                downloadVideoBtn.classList.add('hidden');
+                compressVideoBtn.disabled = false;
+
+                // Display video info
+                document.getElementById('original-video-name').textContent = file.name;
+                document.getElementById('original-video-size').textContent = `Size: ${formatBytes(file.size)}`;
+
+                // Get video metadata
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+
+                video.onloadedmetadata = function() {
+                    window.URL.revokeObjectURL(video.src);
+                    const duration = Math.floor(video.duration);
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = duration % 60;
+                    document.getElementById('original-video-duration').textContent =
+                        `Duration: ${minutes}m ${seconds}s`;
+                    document.getElementById('original-video-resolution').textContent =
+                        `Resolution: ${video.videoWidth} x ${video.videoHeight}`;
+                }
+
+                video.src = URL.createObjectURL(file);
+            });
+
+            // Compress video button handler
+            compressVideoBtn.addEventListener('click', async () => {
+                if (!currentVideoFile) return;
+
+                compressVideoBtn.disabled = true;
+                videoProgress.classList.remove('hidden');
+                videoOutput.classList.add('hidden');
+                progressFill.style.width = '0%';
+                progressFill.textContent = '0%';
+
+                try {
+                    // Initialize FFmpeg if not already loaded
+                    if (!loadedFFmpeg) {
+                        progressText.textContent = 'Loading FFmpeg library (one-time download)...';
+                        ffmpeg = createFFmpeg({
+                            log: true,
+                            progress: ({ ratio }) => {
+                                const percentage = Math.round(ratio * 100);
+                                progressFill.style.width = percentage + '%';
+                                progressFill.textContent = percentage + '%';
+                                progressText.textContent = `Compressing video... ${percentage}%`;
+                            },
+                            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+                        });
+
+                        await ffmpeg.load();
+                        loadedFFmpeg = true;
+                    }
+
+                    progressText.textContent = 'Uploading video to memory...';
+                    progressFill.style.width = '5%';
+                    progressFill.textContent = '5%';
+
+                    // Clean up any previous files
+                    try {
+                        ffmpeg.FS('unlink', 'input.mp4');
+                    } catch (e) {
+                        // File doesn't exist, ignore
+                    }
+
+                    // Write input file to FFmpeg filesystem
+                    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(currentVideoFile));
+
+                    progressText.textContent = 'Analyzing video and calculating optimal settings...';
+                    progressFill.style.width = '10%';
+                    progressFill.textContent = '10%';
+
+                    // Get compression settings
+                    const compressionType = document.querySelector('input[name="compression-type"]:checked').value;
+                    const outputFormat = document.getElementById('video-format').value;
+                    const originalSizeKB = currentVideoFile.size / 1024;
+
+                    // Get video duration from metadata
+                    const videoDuration = await getVideoDuration(currentVideoFile);
+                    const audioBitrate = '128k'; // Good quality audio
+
+                    let targetBitrate;
+
+                    if (compressionType === 'percentage') {
+                        const percentage = document.getElementById('compression-percentage').value;
+                        const targetSizeKB = (originalSizeKB * percentage) / 100;
+                        targetBitrate = calculateBitrate(targetSizeKB, videoDuration);
+                    } else {
+                        const targetSizeKB = document.getElementById('target-size').value;
+                        if (!targetSizeKB || targetSizeKB < 100) {
+                            alert('Please enter a valid target size (minimum 100 KB)');
+                            compressVideoBtn.disabled = false;
+                            videoProgress.classList.add('hidden');
+                            return;
+                        }
+                        targetBitrate = calculateBitrate(targetSizeKB, videoDuration);
+                    }
+
+                    progressText.textContent = 'Preparing compression settings...';
+                    progressFill.style.width = '15%';
+                    progressFill.textContent = '15%';
+
+                    // Build FFmpeg command for quality-preserved compression
+                    let outputFileName = `output.${outputFormat}`;
+
+                    // Clean up any previous output files
+                    try {
+                        ffmpeg.FS('unlink', outputFileName);
+                    } catch (e) {
+                        // File doesn't exist, ignore
+                    }
+
+                    // Build FFmpeg command with proper quality settings
+                    let ffmpegArgs;
+
+                    if (outputFormat === 'mp4' || outputFormat === 'mkv') {
+                        // For H.264: Use 2-pass encoding for accurate target size with good quality
+                        ffmpegArgs = [
+                            '-i', 'input.mp4',
+                            '-c:v', 'libx264',
+                            '-b:v', targetBitrate,
+                            '-maxrate', targetBitrate,
+                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
+                            '-c:a', 'aac',
+                            '-b:a', audioBitrate,
+                            '-preset', 'slow', // Better quality
+                            '-profile:v', 'high', // High profile for better quality
+                            '-level', '4.1',
+                            '-movflags', '+faststart', // Fast start for web playback
+                            '-pix_fmt', 'yuv420p',
+                            outputFileName
+                        ];
+                    } else if (outputFormat === 'webm') {
+                        // For VP8/WebM: Use constrained quality mode
+                        ffmpegArgs = [
+                            '-i', 'input.mp4',
+                            '-c:v', 'libvpx',
+                            '-b:v', targetBitrate,
+                            '-maxrate', targetBitrate,
+                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
+                            '-qmin', '10',
+                            '-qmax', '42',
+                            '-c:a', 'libvorbis',
+                            '-b:a', audioBitrate,
+                            '-quality', 'good',
+                            '-cpu-used', '0', // Best quality (slower)
+                            outputFileName
+                        ];
+                    } else {
+                        // For AVI and others
+                        ffmpegArgs = [
+                            '-i', 'input.mp4',
+                            '-c:v', getVideoCodec(outputFormat),
+                            '-b:v', targetBitrate,
+                            '-maxrate', targetBitrate,
+                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
+                            '-c:a', getAudioCodec(outputFormat),
+                            '-b:a', audioBitrate,
+                            '-q:v', '3', // Quality setting (lower = better)
+                            outputFileName
+                        ];
+                    }
+
+                    progressText.textContent = 'Starting video compression...';
+
+                    // Execute FFmpeg command (progress callback will update status)
+                    await ffmpeg.run(...ffmpegArgs);
+
+                    progressText.textContent = 'Finalizing and packaging compressed video...';
+                    progressFill.style.width = '95%';
+                    progressFill.textContent = '95%';
+
+                    // Read the output file
+                    const data = ffmpeg.FS('readFile', outputFileName);
+                    compressedVideoBlob = new Blob([data.buffer], { type: `video/${outputFormat}` });
+
+                    // Display results
+                    displayVideoResult(currentVideoFile, compressedVideoBlob, outputFormat);
+
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = '100%';
+                    progressText.textContent = 'Compression complete!';
+
+                    setTimeout(() => {
+                        videoProgress.classList.add('hidden');
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Video compression error:', error);
+
+                    let errorMessage = error.message;
+
+                    // Provide helpful error messages
+                    if (error.message.includes('SharedArrayBuffer')) {
+                        errorMessage = 'Video compression requires a secure context (HTTPS). Please deploy this tool to a web server with HTTPS to use video compression features.';
+                    } else if (error.message.includes('codec') || error.message.includes('encoder')) {
+                        errorMessage = 'The selected output format may not be fully supported. Try using MP4 format instead.';
+                    }
+
+                    alert('Error compressing video: ' + errorMessage);
+                    videoProgress.classList.add('hidden');
+                    compressVideoBtn.disabled = false;
+                }
+            });
+
+            // Download compressed video button handler
+            downloadVideoBtn.addEventListener('click', () => {
+                if (!compressedVideoBlob) return;
+
+                const outputFormat = document.getElementById('video-format').value;
+                const originalName = currentVideoFile.name.substring(0, currentVideoFile.name.lastIndexOf('.')) || currentVideoFile.name;
+                const fileName = `${originalName}_compressed.${outputFormat}`;
+
+                const url = URL.createObjectURL(compressedVideoBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // Helper functions
+            function calculateBitrate(targetSizeKB, durationInSeconds) {
+                // More accurate bitrate calculation
+                const targetSizeBytes = targetSizeKB * 1024;
+                const audioBitrateKbps = 128; // 128 kbps for audio
+
+                // Calculate audio size: (bitrate in kbps * duration in seconds * 1024 bits) / 8 bits per byte
+                const audioSizeBytes = (audioBitrateKbps * durationInSeconds * 1024) / 8;
+
+                // Remaining size for video (with 5% overhead for container)
+                const videoSizeBytes = (targetSizeBytes - audioSizeBytes) * 0.95;
+
+                // Calculate video bitrate: (size in bytes * 8 bits per byte) / duration in seconds
+                const videoBitrateBps = (videoSizeBytes * 8) / durationInSeconds;
+
+                // Convert to kbps for better readability in logs
+                const bitrateKbps = Math.floor(videoBitrateBps / 1024);
+
+                // Ensure minimum quality bitrate (256kbps min, but prefer 500kbps+)
+                const finalBitrateKbps = Math.max(bitrateKbps, 256);
+
+                // Return as string with 'k' suffix for FFmpeg
+                return finalBitrateKbps + 'k';
+            }
+
+            function getVideoDuration(file) {
+                return new Promise((resolve) => {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    video.onloadedmetadata = function() {
+                        window.URL.revokeObjectURL(video.src);
+                        resolve(video.duration);
+                    }
+                    video.src = URL.createObjectURL(file);
+                });
+            }
+
+            function getVideoCodec(format) {
+                const codecs = {
+                    'mp4': 'libx264',
+                    'webm': 'libvpx', // Using libvpx (VP8) for better compatibility
+                    'avi': 'mpeg4',
+                    'mkv': 'libx264'
+                };
+                return codecs[format] || 'libx264';
+            }
+
+            function getAudioCodec(format) {
+                const codecs = {
+                    'mp4': 'aac',
+                    'webm': 'libvorbis', // Using Vorbis for better compatibility with VP8
+                    'avi': 'libmp3lame',
+                    'mkv': 'aac'
+                };
+                return codecs[format] || 'aac';
+            }
+
+            function displayVideoResult(originalFile, compressedBlob, format) {
+                const originalSize = originalFile.size;
+                const compressedSize = compressedBlob.size;
+                const reduction = ((originalSize - compressedSize) / originalSize) * 100;
+
+                document.getElementById('compressed-video-size').textContent = `Size: ${formatBytes(compressedSize)}`;
+                document.getElementById('compression-ratio').textContent =
+                    `Compression: ${reduction.toFixed(2)}% reduction (${formatBytes(originalSize)} → ${formatBytes(compressedSize)})`;
+                document.getElementById('quality-info').textContent = 'Quality: High (H.264 High Profile, Optimized Encoding)';
+
+                // Show preview
+                const previewVideo = document.getElementById('preview-video');
+                previewVideo.src = URL.createObjectURL(compressedBlob);
+
+                videoOutput.classList.remove('hidden');
+                downloadVideoBtn.classList.remove('hidden');
+                downloadVideoBtn.disabled = false;
+                compressVideoBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

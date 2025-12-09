@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+    <!-- Main Toolkit Page -->
+    <url>
+        <loc>https://toolkit.pillowpotion.com/</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- AI Background Remover Tool -->
+    <url>
+        <loc>https://toolkit.pillowpotion.com/bg-remover/</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/bg-remover/bulk-background-remover.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/bg-remover/white-background-tool.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/bg-remover/what-is-transparent-png.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <!-- Image & Video Compressor Tool -->
+    <url>
+        <loc>https://toolkit.pillowpotion.com/compressor/</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/compressor/bulk-photo-compressor.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/compressor/png-to-webp-converter.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/compressor/image-optimization-guide.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://toolkit.pillowpotion.com/compressor/compressor.html</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- Migration Assistant (Under Development) -->
+    <url>
+        <loc>https://toolkit.pillowpotion.com/migration-assistant/</loc>
+        <lastmod>2024-12-10</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- PDF Editor (Coming Soon) -->
+    <!-- Will be added when PDF editor is developed -->
+
+</urlset>

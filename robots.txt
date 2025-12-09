@@ -1,0 +1,44 @@
+# Robots.txt for PillowPotion Toolkit
+# https://toolkit.pillowpotion.com
+
+User-agent: *
+Allow: /
+
+# Disallow development/testing areas
+Disallow: /migration-assistant/temp/
+Disallow: /migration-assistant/logs/
+Disallow: /migration-assistant/sessions/
+Disallow: /migration-assistant/node_modules/
+Disallow: /.git/
+Disallow: /.claude/
+
+# Disallow files
+Disallow: /*.json$
+Disallow: /*.md$
+Disallow: /*.log$
+Disallow: /.env
+
+# Allow CSS and JS
+Allow: /css/
+Allow: /js/
+Allow: /*.css$
+Allow: /*.js$
+
+# Sitemap location
+Sitemap: https://toolkit.pillowpotion.com/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1

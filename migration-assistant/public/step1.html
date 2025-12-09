@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 1: Connect Old Account - Website Migration Assistant</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <span class="logo-icon">🚀</span>
+          Website Migration Assistant
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container-sm">
+      <!-- Progress Steps -->
+      <div class="progress-steps">
+        <div class="step active">
+          <div class="step-circle">1</div>
+          <span class="step-label">Old Account</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">2</div>
+          <span class="step-label">Select Sites</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">3</div>
+          <span class="step-label">New Account</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">4</div>
+          <span class="step-label">Migrate</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">5</div>
+          <span class="step-label">Emails</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">6</div>
+          <span class="step-label">DNS</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">7</div>
+          <span class="step-label">Complete</span>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Step 1: Connect to Your Old Hosting Account</h1>
+          <p class="card-description">
+            Select your current hosting provider and enter your API credentials to connect.
+          </p>
+        </div>
+
+        <div class="card-body">
+          <!-- Alert Container -->
+          <div id="alertContainer"></div>
+
+          <!-- Provider Selection -->
+          <div class="form-group">
+            <label class="form-label form-label-required">Select Your Hosting Provider</label>
+            <p class="form-help">Choose the provider where your websites are currently hosted</p>
+
+            <select id="providerSelect" class="form-select">
+              <option value="">-- Choose Provider --</option>
+              <optgroup label="Popular cPanel Hosts">
+                <option value="hostinger">Hostinger</option>
+                <option value="bluehost">Bluehost</option>
+                <option value="siteground">SiteGround</option>
+                <option value="godaddy-cpanel">GoDaddy (cPanel)</option>
+                <option value="hostgator">HostGator</option>
+                <option value="namecheap-cpanel">Namecheap (cPanel)</option>
+                <option value="a2hosting">A2 Hosting</option>
+                <option value="inmotion">InMotion Hosting</option>
+                <option value="dreamhost">DreamHost</option>
+                <option value="ipage">iPage</option>
+                <option value="greengeeks">GreenGeeks</option>
+                <option value="hostwinds">Hostwinds</option>
+                <option value="interserver">InterServer</option>
+                <option value="cpanel-generic">Other cPanel Host</option>
+              </optgroup>
+              <optgroup label="Other Control Panels">
+                <option value="plesk">Plesk</option>
+                <option value="directadmin">DirectAdmin</option>
+                <option value="cloudways">Cloudways</option>
+                <option value="godaddy-plesk">GoDaddy (Plesk)</option>
+                <option value="namecheap-directadmin">Namecheap (DirectAdmin)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Provider Info Card -->
+          <div id="providerInfo" class="hidden" style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: start; gap: 1rem;">
+              <div id="providerLogo" style="flex-shrink: 0;">
+                <!-- Provider logo will be inserted here -->
+              </div>
+              <div style="flex: 1;">
+                <h3 id="providerName" style="font-size: 1.1rem; margin-bottom: 0.5rem;"></h3>
+                <p id="providerNotes" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></p>
+                <div id="providerFeatures" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                  <!-- Features will be inserted here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credentials Form (Dynamic) -->
+          <form id="credentialsForm" class="hidden">
+            <div id="credentialFields">
+              <!-- Fields will be dynamically inserted here based on provider -->
+            </div>
+
+            <!-- Help Link -->
+            <div id="helpSection" class="hidden" style="padding: 1rem; background: #EFF6FF; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+              <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">💡</span>
+                <div>
+                  <strong style="color: var(--info-color);">Need help finding your API credentials?</strong>
+                  <p style="margin-top: 0.25rem; font-size: 0.9rem; color: var(--text-secondary);">
+                    <a id="helpLink" href="#" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                      Click here for instructions →
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <button type="button" id="testConnectionBtn" class="btn btn-outline" disabled>
+                <span id="testBtnIcon">🔍</span>
+                <span id="testBtnText">Test Connection</span>
+              </button>
+              <button type="submit" id="connectBtn" class="btn btn-primary" disabled>
+                <span id="connectBtnIcon">🔌</span>
+                <span id="connectBtnText">Connect & Scan Sites</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Not Implemented Warning (for Plesk, Cloudways, DirectAdmin) -->
+          <div id="notImplementedWarning" class="hidden">
+            <div class="alert alert-warning">
+              <strong>⚠️ Provider Not Yet Implemented</strong>
+              <p style="margin-top: 0.5rem;">
+                This provider will be fully supported in Phase 8. Currently, only cPanel-based providers are fully functional.
+              </p>
+              <p style="margin-top: 0.5rem;">
+                <strong>Fully Supported Providers (Phase 1):</strong><br>
+                Hostinger, Bluehost, SiteGround, GoDaddy (cPanel), HostGator, Namecheap (cPanel),
+                A2 Hosting, InMotion Hosting, DreamHost, iPage, GreenGeeks, Hostwinds, InterServer,
+                and all other cPanel hosts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <a href="/" class="btn btn-secondary">
+            ← Back to Home
+          </a>
+          <div id="nextStepBtn" class="hidden">
+            <a href="/step2" class="btn btn-success">
+              Next: Select Sites →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Status Card (shown after successful connection) -->
+      <div id="connectionStatus" class="card hidden" style="border: 2px solid var(--success-color);">
+        <div class="card-header">
+          <h2 class="card-title" style="color: var(--success-color);">✅ Successfully Connected!</h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <strong style="color: var(--text-secondary); font-size: 0.9rem;">Provider</strong>
+              <p id="statusProvider" style="font-size: 1.1rem; margin-top: 0.25rem;"></p>
+            </div>
+            <div>
+              <strong style="color: var(--text-secondary); font-size: 0.9rem;">Username</strong>
+              <p id="statusUsername" style="font-size: 1.1rem; margin-top: 0.25rem;"></p>
+            </div>
+            <div>
+              <strong style="color: var(--text-secondary); font-size: 0.9rem;">Email</strong>
+              <p id="statusEmail" style="font-size: 1.1rem; margin-top: 0.25rem;"></p>
+            </div>
+            <div>
+              <strong style="color: var(--text-secondary); font-size: 0.9rem;">Disk Usage</strong>
+              <p id="statusDisk" style="font-size: 1.1rem; margin-top: 0.25rem;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-content">
+      <div class="loading loading-lg" style="border-color: var(--border-color); border-top-color: var(--primary-color);"></div>
+      <p id="loadingText" style="margin-top: 1rem; color: var(--text-secondary);">Connecting...</p>
+    </div>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/step1.js"></script>
+</body>
+</html>

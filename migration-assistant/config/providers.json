@@ -1,0 +1,634 @@
+{
+  "providers": {
+    "hostinger": {
+      "id": "hostinger",
+      "name": "Hostinger",
+      "category": "other",
+      "adapter": "HostingerAdapter",
+      "logo": "https://cdn.worldvectorlogo.com/logos/hostinger-1.svg",
+      "defaultPort": null,
+      "requiresServerUrl": false,
+      "credentialFields": [
+        {
+          "name": "apiKey",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter your Hostinger API key",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://support.hostinger.com/en/articles/1583245-how-to-use-cpanel-api",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Hostinger uses custom hPanel API. Implementation coming in Phase 8. For now, use manual migration or select a cPanel-based provider."
+    },
+    "bluehost": {
+      "id": "bluehost",
+      "name": "Bluehost",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.bluehost.com/resources/wp-content/themes/bluehost-theme/assets/images/logos/bluehost-logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.bluehost.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.bluehost.com/help/article/cpanel-api-tokens",
+      "features": ["ssl", "email", "databases", "ftp", "softaculous"],
+      "notes": "Owned by EIG. May require IP whitelisting for API access."
+    },
+    "siteground": {
+      "id": "siteground",
+      "name": "SiteGround",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.siteground.com/static/assets/images/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.siteground.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://world.siteground.com/kb/cpanel-api/",
+      "features": ["ssl", "email", "databases", "ftp", "git"],
+      "notes": "Newer accounts may use Site Tools instead of cPanel. Contact support to enable API access."
+    },
+    "godaddy-cpanel": {
+      "id": "godaddy-cpanel",
+      "name": "GoDaddy (cPanel)",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://img6.wsimg.com/ux/1.3.45/help/logo-godaddy.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.secureserver.net",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.godaddy.com/help/cpanel-api-32121",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "GoDaddy offers both cPanel and Plesk. Choose the correct option for your hosting plan."
+    },
+    "hostgator": {
+      "id": "hostgator",
+      "name": "HostGator",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.hostgator.com/static/images/hg-logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.hostgator.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.hostgator.com/help/article/how-to-use-the-cpanel-api",
+      "features": ["ssl", "email", "databases", "ftp", "softaculous"],
+      "notes": "Owned by EIG (same parent as Bluehost). Standard cPanel implementation."
+    },
+    "namecheap-cpanel": {
+      "id": "namecheap-cpanel",
+      "name": "Namecheap (cPanel)",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.namecheap.com/assets/img/nc-icon/light/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.web-hosting.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/9776/2208/how-to-generate-api-token-in-cpanel/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Namecheap offers both cPanel (Stellar plans) and DirectAdmin (Budget plans)."
+    },
+    "a2hosting": {
+      "id": "a2hosting",
+      "name": "A2 Hosting",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.a2hosting.com/images/a2hosting-logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.a2hosting.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.a2hosting.com/kb/cpanel/cpanel-api-tokens",
+      "features": ["ssl", "email", "databases", "ftp", "turbo"],
+      "notes": "Note PHP version differences on Turbo servers. SwiftServer platform available on Turbo plans."
+    },
+    "inmotion": {
+      "id": "inmotion",
+      "name": "InMotion Hosting",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.inmotionhosting.com/images/logo-inmotion-hosting.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.inmotionhosting.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.inmotionhosting.com/support/product-guides/cpanel-hosting/api-tokens/",
+      "features": ["ssl", "email", "databases", "ftp", "boldgrid"],
+      "notes": "Includes BoldGrid website builder. AMP (Account Management Panel) in addition to cPanel."
+    },
+    "dreamhost": {
+      "id": "dreamhost",
+      "name": "DreamHost",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.dreamhost.com/assets/images/logo-dreamhost.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token (if available)",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.dreamhost.com",
+          "required": false
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://help.dreamhost.com/hc/en-us/articles/217560167-API-overview",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Older accounts use custom DreamHost panel. Newer accounts may have cPanel option. May require custom adapter for non-cPanel accounts."
+    },
+    "ipage": {
+      "id": "ipage",
+      "name": "iPage",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.ipage.com/images/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.ipage.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.ipage.com/help/article/cpanel-api-access",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Standard cPanel implementation."
+    },
+    "greengeeks": {
+      "id": "greengeeks",
+      "name": "GreenGeeks",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.greengeeks.com/images/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.greengeeks.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.greengeeks.com/tutorials/cpanel-api/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Eco-friendly hosting with standard cPanel implementation."
+    },
+    "hostwinds": {
+      "id": "hostwinds",
+      "name": "Hostwinds",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.hostwinds.com/images/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.hostwinds.com",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.hostwinds.com/guide/cpanel-api/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Standard cPanel implementation with good API support."
+    },
+    "interserver": {
+      "id": "interserver",
+      "name": "InterServer",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://www.interserver.net/images/logo.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.interserver.net",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.interserver.net/tips/kb/cpanel-api/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Budget-friendly hosting with standard cPanel."
+    },
+    "cpanel-generic": {
+      "id": "cpanel-generic",
+      "name": "Other cPanel Host",
+      "category": "cpanel",
+      "adapter": "CpanelAdapter",
+      "logo": "https://cpanel.net/wp-content/uploads/2019/09/cPanel-L.svg",
+      "defaultPort": 2083,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiToken",
+          "label": "API Token",
+          "type": "password",
+          "placeholder": "Enter your cPanel API token",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.example.com:2083",
+          "required": true
+        },
+        {
+          "name": "username",
+          "label": "cPanel Username",
+          "type": "text",
+          "placeholder": "Your cPanel username",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://api.docs.cpanel.net/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Use this for any cPanel-based hosting not listed above."
+    },
+    "plesk": {
+      "id": "plesk",
+      "name": "Plesk",
+      "category": "other",
+      "adapter": "PleskAdapter",
+      "logo": "https://www.plesk.com/wp-content/themes/plesk-theme/images/logo.svg",
+      "defaultPort": 8443,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiKey",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter your Plesk API key",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.example.com:8443",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://docs.plesk.com/en-US/obsidian/api-rpc/",
+      "features": ["ssl", "email", "databases", "ftp", "git"],
+      "notes": "Used by various providers. Supports both Linux and Windows hosting."
+    },
+    "cloudways": {
+      "id": "cloudways",
+      "name": "Cloudways",
+      "category": "other",
+      "adapter": "CloudwaysAdapter",
+      "logo": "https://www.cloudways.com/images/cloudways-logo.svg",
+      "defaultPort": null,
+      "requiresServerUrl": false,
+      "credentialFields": [
+        {
+          "name": "apiKey",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter your Cloudways API key",
+          "required": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email",
+          "placeholder": "Your Cloudways account email",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://developers.cloudways.com/docs/",
+      "features": ["ssl", "email", "databases", "sftp", "git", "staging"],
+      "notes": "Managed cloud hosting platform. Supports DigitalOcean, AWS, Google Cloud, etc."
+    },
+    "directadmin": {
+      "id": "directadmin",
+      "name": "DirectAdmin",
+      "category": "other",
+      "adapter": "DirectAdminAdapter",
+      "logo": "https://www.directadmin.com/images/logo.svg",
+      "defaultPort": 2222,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "username",
+          "label": "Username",
+          "type": "text",
+          "placeholder": "DirectAdmin username",
+          "required": true
+        },
+        {
+          "name": "password",
+          "label": "Password",
+          "type": "password",
+          "placeholder": "DirectAdmin password",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.example.com:2222",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.directadmin.com/api.php",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Budget control panel. May have limited API features compared to cPanel."
+    },
+    "godaddy-plesk": {
+      "id": "godaddy-plesk",
+      "name": "GoDaddy (Plesk)",
+      "category": "other",
+      "adapter": "PleskAdapter",
+      "logo": "https://img6.wsimg.com/ux/1.3.45/help/logo-godaddy.svg",
+      "defaultPort": 8443,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "apiKey",
+          "label": "API Key",
+          "type": "password",
+          "placeholder": "Enter your Plesk API key",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.secureserver.net:8443",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.godaddy.com/help/plesk-api-32122",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "GoDaddy Windows hosting uses Plesk. Linux hosting uses cPanel."
+    },
+    "namecheap-directadmin": {
+      "id": "namecheap-directadmin",
+      "name": "Namecheap (DirectAdmin)",
+      "category": "other",
+      "adapter": "DirectAdminAdapter",
+      "logo": "https://www.namecheap.com/assets/img/nc-icon/light/logo.svg",
+      "defaultPort": 2222,
+      "requiresServerUrl": true,
+      "credentialFields": [
+        {
+          "name": "username",
+          "label": "Username",
+          "type": "text",
+          "placeholder": "DirectAdmin username",
+          "required": true
+        },
+        {
+          "name": "password",
+          "label": "Password",
+          "type": "password",
+          "placeholder": "DirectAdmin password",
+          "required": true
+        },
+        {
+          "name": "serverUrl",
+          "label": "Server URL",
+          "type": "text",
+          "placeholder": "https://your-server.web-hosting.com:2222",
+          "required": true
+        }
+      ],
+      "helpUrl": "https://www.namecheap.com/support/knowledgebase/subcategory/29/directadmin/",
+      "features": ["ssl", "email", "databases", "ftp"],
+      "notes": "Namecheap budget hosting plans use DirectAdmin."
+    }
+  }
+}

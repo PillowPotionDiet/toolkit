@@ -1,0 +1,15 @@
+# robots.txt for removebg.pillowpotion.com
+# AI Background Remover - Free Background Removal Tool
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://removebg.pillowpotion.com/sitemap.xml
+
+# Crawl-delay (optional - helps prevent server overload)
+Crawl-delay: 1
+
+# Disallow internal files (if any)
+# Disallow: /admin/
+# Disallow: /.git/
