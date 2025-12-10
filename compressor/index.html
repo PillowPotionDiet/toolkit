@@ -6,23 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Free Image & Video Compressor | JPG, PNG, WEBP, MP4, WebM - PillowPotion</title>
+    <title>Free Image Compressor & Converter | JPG, PNG, WEBP - PillowPotion</title>
     <meta name="description"
-        content="Free unlimited image and video compressor with format converter. Compress images (JPG, PNG, WEBP) and videos (MP4, WebM, AVI) with target size control. No limits, no signup required!">
+        content="Free unlimited image compressor and format converter. Compress images (JPG, PNG, WEBP) or just convert formats. Bulk processing, no limits, no signup required!">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Free Image & Video Compressor | Multi-Format Support - PillowPotion">
+    <meta property="og:title" content="Free Image Compressor & Converter | Multi-Format Support - PillowPotion">
     <meta property="og:description"
-        content="Compress and convert images (JPG, PNG, WEBP) and videos (MP4, WebM, AVI) with target size control. Free unlimited processing with quality preservation. Part of PillowPotion's professional tools suite.">
+        content="Compress and convert images (JPG, PNG, WEBP) with quality preservation. Free unlimited processing with bulk support. Part of PillowPotion's professional tools suite.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://toolkit.pillowpotion.com/compressor/">
     <meta property="og:image" content="https://pillowpotion.com/offers/pillowpotionlogo.webp">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Free Image & Video Compressor | JPG, PNG, WEBP, MP4, WebM">
+    <meta name="twitter:title" content="Free Image Compressor & Converter | JPG, PNG, WEBP">
     <meta name="twitter:description"
-        content="Free unlimited image and video compressor. Convert and compress images and videos with target size control and quality preservation.">
+        content="Free unlimited image compressor and converter. Compress and convert images with quality preservation and bulk processing.">
     <meta name="twitter:image" content="https://pillowpotion.com/offers/pillowpotionlogo.webp">
 
     <!-- Canonical URL -->
@@ -30,7 +30,7 @@
 
     <!-- Favicon -->
     <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜️</text></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
 
     <!-- Preload Critical Resources -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" as="script">
@@ -537,6 +537,39 @@
             display: none;
         }
 
+        /* Context-aware Guidance Banner */
+        .guidance-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .guidance-banner h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guidance-banner p {
+            line-height: 1.7;
+            opacity: 0.95;
+        }
+
+        .guidance-banner ul {
+            margin-top: 15px;
+            padding-left: 25px;
+        }
+
+        .guidance-banner li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
         .progress-bar {
             width: 100%;
             height: 30px;
@@ -715,7 +748,7 @@
     {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "Free Image & Video Compressor - PillowPotion",
+        "name": "Free Image Compressor & Converter - PillowPotion",
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Web Browser",
         "publisher": {
@@ -728,8 +761,8 @@
             "price": "0",
             "priceCurrency": "USD"
         },
-        "featureList": "Image compression (JPG, PNG, WEBP), Video compression (MP4, WebM, AVI, MKV), Target size control, Percentage-based compression, Quality preservation, Format conversion, Bulk batch processing, ZIP download, No file size limits, No signup required",
-        "description": "Free unlimited image and video compressor with format converter. Compress images and videos with target size control and quality preservation. Supports multiple formats and bulk processing.",
+        "featureList": "Image compression (JPG, PNG, WEBP), Format conversion, Compress or convert options, Per-file settings, Bulk batch processing, ZIP download, Smart auto-quality detection, No file size limits, No signup required",
+        "description": "Free unlimited image compressor and format converter. Compress images, convert formats, or both. Bulk processing with per-file settings and quality preservation.",
         "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": "4.9",
@@ -839,31 +872,27 @@
         <a href="../" style="text-decoration: none; color: inherit;">
             <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" class="brand-logo" onerror="this.style.display='none'">
         </a>
-        <p class="brand-tagline">Professional Image & Video Tools Suite - Part of PillowPotion Toolkit</p>
+        <p class="brand-tagline">Professional Image Tools Suite - Part of PillowPotion Toolkit</p>
         <nav class="tools-nav">
             <a href="../">🏠 Toolkit Home</a>
-            <a href="./">🗜️ Image & Video Compressor</a>
+            <a href="./">🖼️ Image Compressor & Converter</a>
+            <a href="../video-compressor/">🎬 Video Compressor</a>
             <a href="../bg-remover/">✂️ Background Remover</a>
         </nav>
     </div>
 
     <!-- Header -->
     <header class="header">
-        <h1>Free Image & Video Compressor</h1>
-        <p class="subtitle">Images & Videos • Multi-Format • Target Size Control • Quality Preserved • 100% Free</p>
+        <h1>Free Image Compressor & Converter</h1>
+        <p class="subtitle">JPG, PNG, WEBP • Compress or Convert • Bulk Processing • Quality Preserved • 100% Free</p>
     </header>
 
-    <!-- Mode Switcher -->
-    <div class="mode-switcher">
-        <button class="mode-btn active" id="image-mode-btn" onclick="switchMode('image')">
-            🖼️ Image Compressor
-        </button>
-        <button class="mode-btn" id="video-mode-btn" onclick="switchMode('video')">
-            🎥 Video Compressor
-        </button>
-    </div>
-
     <div class="container">
+        <!-- Context-Aware Guidance Banner -->
+        <div id="guidance-banner" class="guidance-banner hidden">
+            <!-- Banner content will be dynamically injected based on URL parameter -->
+        </div>
+
         <!-- Image Compression Section -->
         <div id="image-section">
             <section class="tool-section">
@@ -886,181 +915,75 @@
             </section>
         </div>
 
-        <!-- Video Compression Section -->
-        <div id="video-section" class="hidden">
-            <section class="tool-section">
-                <div class="upload-zone" id="video-upload-zone">
-                    <input type="file" id="video-file" accept="video/*">
-                    <div class="upload-icon">🎬</div>
-                    <h3>Drop video here or click to upload</h3>
-                    <p>Support for MP4, WebM, AVI, MKV, MOV • One video at a time</p>
-                </div>
-
-                <div id="video-settings" class="hidden">
-                    <h3 style="margin-bottom: 20px;">Compression Settings</h3>
-
-                    <div class="compression-method">
-                        <label><strong>Output Format:</strong></label>
-                        <select class="format-select" id="video-format" style="width: 100%; max-width: 300px;">
-                            <option value="mp4">MP4 (H.264)</option>
-                            <option value="webm">WebM (VP8)</option>
-                            <option value="avi">AVI (MPEG4)</option>
-                            <option value="mkv">MKV (H.264)</option>
-                        </select>
-                    </div>
-
-                    <div class="compression-method">
-                        <label><strong>Compression Method:</strong></label>
-                        <div>
-                            <label>
-                                <input type="radio" name="compression-type" value="percentage" checked onchange="updateCompressionControls()">
-                                Compress by Percentage
-                            </label>
-                        </div>
-                        <div>
-                            <label>
-                                <input type="radio" name="compression-type" value="targetsize" onchange="updateCompressionControls()">
-                                Compress to Target Size (KB)
-                            </label>
-                        </div>
-
-                        <div class="compression-controls" id="percentage-controls">
-                            <label for="compression-percentage"><strong>Compression Percentage:</strong></label>
-                            <input type="range" id="compression-percentage" min="10" max="90" value="50" oninput="updatePercentageDisplay()">
-                            <div style="text-align: center; margin-top: 10px; font-weight: 600; color: #667eea;">
-                                <span id="percentage-display">50%</span> of original size
-                            </div>
-                        </div>
-
-                        <div class="compression-controls hidden" id="targetsize-controls">
-                            <label for="target-size"><strong>Target Size (KB):</strong></label>
-                            <input type="number" id="target-size" min="100" step="100" placeholder="e.g., 5000" oninput="updateTargetSizeDisplay()">
-                            <div style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">
-                                Enter desired file size in kilobytes
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="size-info" id="video-info">
-                        <strong>Original Video:</strong><br>
-                        <span id="original-video-name">-</span><br>
-                        <span id="original-video-size">Size: -</span><br>
-                        <span id="original-video-duration">Duration: -</span><br>
-                        <span id="original-video-resolution">Resolution: -</span>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button id="compress-video-btn" disabled>Compress Video</button>
-                    <button id="download-video-btn" disabled class="hidden">Download Compressed Video</button>
-                </div>
-
-                <div id="video-progress" class="hidden">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill">0%</div>
-                    </div>
-                    <p id="progress-text" style="text-align: center; color: #667eea; font-weight: 600;">Processing...</p>
-                </div>
-
-                <div id="video-output" class="hidden">
-                    <h3>Compression Result:</h3>
-                    <div class="size-info">
-                        <strong>Compressed Video:</strong><br>
-                        <span id="compressed-video-size">Size: -</span><br>
-                        <span id="compression-ratio">Compression: -</span><br>
-                        <span id="quality-info">Quality: Preserved</span>
-                    </div>
-                    <div class="video-preview">
-                        <h4>Preview:</h4>
-                        <video id="preview-video" controls></video>
-                    </div>
-                </div>
-            </section>
-        </div>
-
         <!-- Features Section -->
         <section class="content-section">
-            <h2>Why Our Tool is the Ultimate Image & Video Compressor</h2>
+            <h2>Why Our Tool is the Ultimate Image Compressor & Converter</h2>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🔄</div>
                     <h3>Multi-Format Conversion</h3>
-                    <p>Convert <strong>images (JPG, PNG, WEBP)</strong> and <strong>videos (MP4, WebM, AVI, MKV)</strong> instantly. Perfect for web optimization or compatibility across all devices and platforms.</p>
+                    <p>Convert <strong>images (JPG, PNG, WEBP)</strong> instantly. Perfect for web optimization or compatibility across all devices and platforms. Convert without compression for lossless format changes.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🎯</div>
-                    <h3>Target Size Control</h3>
-                    <p>Compress videos to <strong>exact target size</strong> or by percentage (10-90%). Our intelligent algorithm calculates optimal bitrate to achieve your desired file size while preserving quality.</p>
+                    <h3>Flexible Compression Options</h3>
+                    <p>Choose to <strong>compress or just convert</strong> for each image individually. Toggle compression on/off per file to get exactly what you need - compress, convert, or both!</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💎</div>
                     <h3>Quality Preservation</h3>
-                    <p>Advanced <strong>H.264 High Profile encoding</strong> with optimized settings ensures maximum quality at any file size. Images use smart auto-quality detection for perfect results.</p>
+                    <p>Smart <strong>auto-quality detection</strong> analyzes each image to determine optimal compression settings. Achieve 60-80% size reduction while maintaining near-original quality.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
-                    <h3>Batch Image Processing</h3>
-                    <p>Upload and process <strong>unlimited images</strong> simultaneously. Toggle compression on/off for each file individually, choose formats, and download all as ZIP.</p>
+                    <h3>Bulk Image Processing</h3>
+                    <p>Upload and process <strong>unlimited images</strong> simultaneously. Toggle compression on/off for each file individually, choose different formats, and download all as ZIP.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🎬</div>
-                    <h3>Professional Video Compression</h3>
-                    <p>One-click video compression with <strong>real-time progress tracking</strong>. Supports MP4, WebM, AVI, and MKV with preview before download. Perfect for social media, email, or web.</p>
+                    <div class="feature-icon">🖼️</div>
+                    <h3>Per-File Format Selection</h3>
+                    <p>Select different output formats for each image. Convert some to WEBP for web, others to PNG for transparency, and JPG for photos - all in one batch!</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🆓</div>
                     <h3>100% Free & Unlimited</h3>
-                    <p>No limits on file size, quantity, or features. No signup required, no watermarks, no hidden fees. Process images and videos forever free with full professional features.</p>
+                    <p>No limits on file size, quantity, or features. No signup required, no watermarks, no hidden fees. Process images forever free with full professional features.</p>
                 </div>
             </div>
         </section>
 
         <!-- How-To Guide -->
         <section class="content-section">
-            <h2>How to Use Image & Video Compressor</h2>
+            <h2>How to Use Image Compressor & Converter</h2>
 
-            <h3>Image Compression - 3 Simple Steps</h3>
+            <h3>3 Simple Steps to Compress or Convert Images</h3>
             <ol class="how-to-steps">
                 <li>
                     <h3>Upload Your Images</h3>
-                    <p>Click "Image Compressor" mode, then upload or drag and drop your JPG, PNG, or WEBP images. Our tool supports bulk uploads with no file limit restrictions.</p>
+                    <p>Upload or drag and drop your JPG, PNG, or WEBP images. Our tool supports bulk uploads with no file limit restrictions. Process unlimited images at once!</p>
                 </li>
                 <li>
                     <h3>Choose Format & Compression Settings</h3>
-                    <p>Select your desired output format (JPG, PNG, or WEBP) for each image. Toggle compression on or off - you can compress images, just convert formats, or do both!</p>
+                    <p>Select your desired output format (JPG, PNG, or WEBP) for each image. Toggle compression on or off per file - you can compress images, just convert formats, or do both! Each image can have different settings.</p>
                 </li>
                 <li>
                     <h3>Download Your Files</h3>
-                    <p>Preview results with before/after comparisons. Download individual files or get all processed images in a single ZIP archive.</p>
+                    <p>Preview results with before/after comparisons showing file size reduction. Download individual files or get all processed images in a single ZIP archive.</p>
                 </li>
             </ol>
 
-            <h3 style="margin-top: 40px;">Video Compression - 4 Simple Steps</h3>
-            <ol class="how-to-steps">
-                <li>
-                    <h3>Switch to Video Mode</h3>
-                    <p>Click the "Video Compressor" button at the top. Upload your video (MP4, WebM, AVI, MKV, MOV) - one video at a time for best results.</p>
-                </li>
-                <li>
-                    <h3>Select Output Format</h3>
-                    <p>Choose your desired format: MP4 (H.264) for maximum compatibility, WebM for web, AVI for editing, or MKV for archiving.</p>
-                </li>
-                <li>
-                    <h3>Set Compression Target</h3>
-                    <p>Choose compression method: compress by percentage (10-90% of original size) or enter exact target size in KB. Our algorithm will optimize bitrate for best quality.</p>
-                </li>
-                <li>
-                    <h3>Compress & Download</h3>
-                    <p>Click "Compress Video" and watch real-time progress. Preview the result and download your compressed video with preserved quality!</p>
-                </li>
-            </ol>
+            <h3 style="margin-top: 40px;">💡 Pro Tips</h3>
+            <ul style="padding-left: 30px; line-height: 1.8;">
+                <li><strong>Just Converting?</strong> Turn off the compression toggle to convert formats without any quality loss (100% lossless).</li>
+                <li><strong>Need Compression?</strong> Keep the toggle on and our smart algorithm will automatically determine the best quality settings for each image.</li>
+                <li><strong>Mix & Match:</strong> Compress some images and just convert others in the same batch - perfect for different use cases!</li>
+                <li><strong>WEBP for Web:</strong> Convert to WEBP format for 25-35% smaller file sizes with identical quality - great for websites!</li>
+            </ul>
         </section>
 
         <!-- FAQ Section -->
         <section class="content-section">
             <h2>Frequently Asked Questions</h2>
-
-            <h3 style="color: #667eea; margin-top: 30px;">Image Compression FAQs</h3>
 
             <div class="faq-item">
                 <div class="faq-question">Can I convert images without compressing them?</div>
@@ -1077,48 +1000,34 @@
                 <div class="faq-answer">Only if you choose to! Our lossless mode (compression toggle OFF) maintains 100% quality. When compression is enabled, our high-quality lossy compression maintains near-original quality while achieving 60-80% size reduction.</div>
             </div>
 
-            <h3 style="color: #667eea; margin-top: 40px;">Video Compression FAQs</h3>
-
             <div class="faq-item">
-                <div class="faq-question">How accurate is the target size compression for videos?</div>
-                <div class="faq-answer">Our advanced bitrate calculation algorithm is highly accurate (typically within 5% of target size). We account for audio bitrate, container overhead, and video duration to calculate the optimal video bitrate that achieves your desired file size while maintaining maximum quality.</div>
+                <div class="faq-question">Is there a limit on how many images I can process?</div>
+                <div class="faq-answer">Absolutely not. Unlike other tools, we offer truly unlimited conversion and compression with no daily limits, no file quantity caps, and no hidden fees. Process as many images as you need, whenever you need.</div>
             </div>
 
             <div class="faq-item">
-                <div class="faq-question">What video formats are supported?</div>
-                <div class="faq-answer">You can upload any video format (MP4, WebM, AVI, MKV, MOV, etc.) and convert to MP4 (H.264), WebM (VP8), AVI, or MKV. MP4 is recommended for maximum compatibility across all devices and platforms.</div>
+                <div class="faq-question">How fast is the conversion process?</div>
+                <div class="faq-answer">Conversion and compression happen instantly in your browser using advanced client-side processing. Most images process in under 2 seconds, and batch processing handles hundreds of photos in minutes without server uploads.</div>
             </div>
 
             <div class="faq-item">
-                <div class="faq-question">Will video compression reduce quality significantly?</div>
-                <div class="faq-answer">Our video compressor uses professional H.264 High Profile encoding with optimized quality settings. Even at 50% compression, most videos maintain excellent visual quality. We use constrained bitrate encoding to prevent quality drops while achieving your target file size.</div>
+                <div class="faq-question">What is WEBP and why should I use it?</div>
+                <div class="faq-answer">WEBP is a modern image format developed by Google that provides 25-35% smaller file sizes than JPG/PNG with identical quality. It's supported by all major browsers and perfect for faster website loading and better SEO rankings.</div>
             </div>
-
-            <div class="faq-item">
-                <div class="faq-question">Can I compress multiple videos at once?</div>
-                <div class="faq-answer">Video compression processes one video at a time for optimal quality and performance. This ensures maximum CPU resources are dedicated to your video, resulting in faster processing and better quality output.</div>
-            </div>
-
-            <div class="faq-item">
-                <div class="faq-question">How long does video compression take?</div>
-                <div class="faq-answer">Processing time depends on video length, resolution, and your device's CPU. A typical 1-minute 1080p video takes 30-90 seconds to compress. The first time you use it, FFmpeg library loads (one-time ~20MB download). You'll see real-time progress during compression.</div>
-            </div>
-
-            <h3 style="color: #667eea; margin-top: 40px;">General FAQs</h3>
 
             <div class="faq-item">
                 <div class="faq-question">Is this tool really free?</div>
-                <div class="faq-answer">Yes, 100% free with no trials, subscriptions, or watermarks. All features including image and video compression, multi-format conversion, bulk processing, and downloads are completely free to use forever. Part of PillowPotion's professional tools suite.</div>
+                <div class="faq-answer">Yes, 100% free with no trials, subscriptions, or watermarks. All features including multi-format conversion, bulk processing, compression options, and ZIP downloads are completely free to use forever. Part of PillowPotion's professional tools suite.</div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">Is my data safe? Where are files processed?</div>
-                <div class="faq-answer">Absolutely safe! All processing happens directly in your browser using client-side technology. Your files never leave your device or get uploaded to any server. This ensures complete privacy and security for your media.</div>
+                <div class="faq-answer">Absolutely safe! All processing happens directly in your browser using client-side technology. Your images never leave your device or get uploaded to any server. This ensures complete privacy and security for your media.</div>
             </div>
 
             <div class="faq-item">
                 <div class="faq-question">What other tools does PillowPotion offer?</div>
-                <div class="faq-answer">PillowPotion offers a complete suite of professional media tools including this Image & Video Compressor and our <a href="https://removebg.pillowpotion.com">Background Remover Tool</a> for instantly removing backgrounds from images. All tools are free and unlimited.</div>
+                <div class="faq-answer">PillowPotion offers a complete suite of professional media tools including this Image Compressor & Converter, our <a href="../video-compressor/">Video Compressor</a>, and our <a href="https://removebg.pillowpotion.com">Background Remover Tool</a> for instantly removing backgrounds from images. All tools are free and unlimited.</div>
             </div>
         </section>
     </div>
@@ -1127,6 +1036,7 @@
     <footer>
         <p>&copy; 2025 PillowPotion - Professional Image Tools Suite. All rights reserved.</p>
         <nav>
+            <a href="../video-compressor/">Video Compressor</a>
             <a href="bulk-photo-compressor.html">Bulk Photo Compressor</a>
             <a href="png-to-webp-converter.html">PNG to WEBP Converter</a>
             <a href="image-optimization-guide.html">Image Optimization Guide</a>
@@ -1138,54 +1048,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
 
-    <!-- FFmpeg for video processing -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-
     <!-- Main Application Script -->
     <script>
-        // Mode switching function
-        function switchMode(mode) {
-            const imageSection = document.getElementById('image-section');
-            const videoSection = document.getElementById('video-section');
-            const imageModeBtn = document.getElementById('image-mode-btn');
-            const videoModeBtn = document.getElementById('video-mode-btn');
+        // Check URL parameters for context-aware guidance
+        function showContextGuidance() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            const banner = document.getElementById('guidance-banner');
 
-            if (mode === 'image') {
-                imageSection.classList.remove('hidden');
-                videoSection.classList.add('hidden');
-                imageModeBtn.classList.add('active');
-                videoModeBtn.classList.remove('active');
-            } else {
-                imageSection.classList.add('hidden');
-                videoSection.classList.remove('hidden');
-                imageModeBtn.classList.remove('active');
-                videoModeBtn.classList.add('active');
+            if (mode === 'convert') {
+                banner.innerHTML = `
+                    <h3>🔄 Image Converter Mode</h3>
+                    <p><strong>You want to convert images to different formats?</strong> Perfect! Here's how:</p>
+                    <ul>
+                        <li>Upload your images below</li>
+                        <li>Select the output format you want (JPG, PNG, or WEBP) for each image</li>
+                        <li><strong>Toggle OFF the compression switch</strong> if you want lossless format conversion (100% original quality)</li>
+                        <li>Or keep compression ON to reduce file size while converting</li>
+                    </ul>
+                `;
+                banner.classList.remove('hidden');
+            } else if (mode === 'compress') {
+                banner.innerHTML = `
+                    <h3>🗜️ Image Compressor Mode</h3>
+                    <p><strong>You want to compress images to reduce file size?</strong> Perfect! Here's how:</p>
+                    <ul>
+                        <li>Upload your images below</li>
+                        <li><strong>Keep the compression toggle ON</strong> for automatic smart compression</li>
+                        <li>Optionally, change the output format (WEBP recommended for best compression)</li>
+                        <li>Our algorithm will automatically determine optimal quality settings for each image</li>
+                    </ul>
+                `;
+                banner.classList.remove('hidden');
             }
         }
 
-        // Video compression control functions
-        function updateCompressionControls() {
-            const selectedType = document.querySelector('input[name="compression-type"]:checked').value;
-            const percentageControls = document.getElementById('percentage-controls');
-            const targetsizeControls = document.getElementById('targetsize-controls');
-
-            if (selectedType === 'percentage') {
-                percentageControls.classList.remove('hidden');
-                targetsizeControls.classList.add('hidden');
-            } else {
-                percentageControls.classList.add('hidden');
-                targetsizeControls.classList.remove('hidden');
-            }
-        }
-
-        function updatePercentageDisplay() {
-            const percentage = document.getElementById('compression-percentage').value;
-            document.getElementById('percentage-display').textContent = percentage + '%';
-        }
-
-        function updateTargetSizeDisplay() {
-            // Just for validation or future use
-        }
+        // Call on page load
+        window.addEventListener('DOMContentLoaded', showContextGuidance);
     </script>
 
     <script>
@@ -1522,362 +1421,10 @@
                     downloadAllBtn.disabled = false;
                 }
             }
-
-            // ==================== VIDEO COMPRESSION FUNCTIONALITY ====================
-            initializeVideoCompression();
         }
 
-        // Video Compression Implementation
-        function initializeVideoCompression() {
-            const { createFFmpeg, fetchFile } = FFmpeg;
-
-            let ffmpeg = null;
-            let loadedFFmpeg = false;
-            let currentVideoFile = null;
-            let compressedVideoBlob = null;
-
-            const videoFileInput = document.getElementById('video-file');
-            const videoUploadZone = document.getElementById('video-upload-zone');
-            const videoSettings = document.getElementById('video-settings');
-            const compressVideoBtn = document.getElementById('compress-video-btn');
-            const downloadVideoBtn = document.getElementById('download-video-btn');
-            const videoProgress = document.getElementById('video-progress');
-            const progressFill = document.getElementById('progress-fill');
-            const progressText = document.getElementById('progress-text');
-            const videoOutput = document.getElementById('video-output');
-
-            // Upload zone click handler
-            videoUploadZone.addEventListener('click', () => videoFileInput.click());
-
-            // Drag and drop handlers for video
-            videoUploadZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                videoUploadZone.style.borderColor = '#764ba2';
-                videoUploadZone.style.backgroundColor = '#eef0ff';
-            });
-
-            videoUploadZone.addEventListener('dragleave', () => {
-                videoUploadZone.style.borderColor = '#667eea';
-                videoUploadZone.style.backgroundColor = '#f8f9ff';
-            });
-
-            videoUploadZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                videoUploadZone.style.borderColor = '#667eea';
-                videoUploadZone.style.backgroundColor = '#f8f9ff';
-                videoFileInput.files = e.dataTransfer.files;
-                videoFileInput.dispatchEvent(new Event('change'));
-            });
-
-            // Video file selection handler
-            videoFileInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                currentVideoFile = file;
-                videoSettings.classList.remove('hidden');
-                videoOutput.classList.add('hidden');
-                videoProgress.classList.add('hidden');
-                downloadVideoBtn.classList.add('hidden');
-                compressVideoBtn.disabled = false;
-
-                // Display video info
-                document.getElementById('original-video-name').textContent = file.name;
-                document.getElementById('original-video-size').textContent = `Size: ${formatBytes(file.size)}`;
-
-                // Get video metadata
-                const video = document.createElement('video');
-                video.preload = 'metadata';
-
-                video.onloadedmetadata = function() {
-                    window.URL.revokeObjectURL(video.src);
-                    const duration = Math.floor(video.duration);
-                    const minutes = Math.floor(duration / 60);
-                    const seconds = duration % 60;
-                    document.getElementById('original-video-duration').textContent =
-                        `Duration: ${minutes}m ${seconds}s`;
-                    document.getElementById('original-video-resolution').textContent =
-                        `Resolution: ${video.videoWidth} x ${video.videoHeight}`;
-                }
-
-                video.src = URL.createObjectURL(file);
-            });
-
-            // Compress video button handler
-            compressVideoBtn.addEventListener('click', async () => {
-                if (!currentVideoFile) return;
-
-                compressVideoBtn.disabled = true;
-                videoProgress.classList.remove('hidden');
-                videoOutput.classList.add('hidden');
-                progressFill.style.width = '0%';
-                progressFill.textContent = '0%';
-
-                try {
-                    // Initialize FFmpeg if not already loaded
-                    if (!loadedFFmpeg) {
-                        progressText.textContent = 'Loading FFmpeg library (one-time download)...';
-                        ffmpeg = createFFmpeg({
-                            log: true,
-                            progress: ({ ratio }) => {
-                                const percentage = Math.round(ratio * 100);
-                                progressFill.style.width = percentage + '%';
-                                progressFill.textContent = percentage + '%';
-                                progressText.textContent = `Compressing video... ${percentage}%`;
-                            },
-                            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
-                        });
-
-                        await ffmpeg.load();
-                        loadedFFmpeg = true;
-                    }
-
-                    progressText.textContent = 'Uploading video to memory...';
-                    progressFill.style.width = '5%';
-                    progressFill.textContent = '5%';
-
-                    // Clean up any previous files
-                    try {
-                        ffmpeg.FS('unlink', 'input.mp4');
-                    } catch (e) {
-                        // File doesn't exist, ignore
-                    }
-
-                    // Write input file to FFmpeg filesystem
-                    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(currentVideoFile));
-
-                    progressText.textContent = 'Analyzing video and calculating optimal settings...';
-                    progressFill.style.width = '10%';
-                    progressFill.textContent = '10%';
-
-                    // Get compression settings
-                    const compressionType = document.querySelector('input[name="compression-type"]:checked').value;
-                    const outputFormat = document.getElementById('video-format').value;
-                    const originalSizeKB = currentVideoFile.size / 1024;
-
-                    // Get video duration from metadata
-                    const videoDuration = await getVideoDuration(currentVideoFile);
-                    const audioBitrate = '128k'; // Good quality audio
-
-                    let targetBitrate;
-
-                    if (compressionType === 'percentage') {
-                        const percentage = document.getElementById('compression-percentage').value;
-                        const targetSizeKB = (originalSizeKB * percentage) / 100;
-                        targetBitrate = calculateBitrate(targetSizeKB, videoDuration);
-                    } else {
-                        const targetSizeKB = document.getElementById('target-size').value;
-                        if (!targetSizeKB || targetSizeKB < 100) {
-                            alert('Please enter a valid target size (minimum 100 KB)');
-                            compressVideoBtn.disabled = false;
-                            videoProgress.classList.add('hidden');
-                            return;
-                        }
-                        targetBitrate = calculateBitrate(targetSizeKB, videoDuration);
-                    }
-
-                    progressText.textContent = 'Preparing compression settings...';
-                    progressFill.style.width = '15%';
-                    progressFill.textContent = '15%';
-
-                    // Build FFmpeg command for quality-preserved compression
-                    let outputFileName = `output.${outputFormat}`;
-
-                    // Clean up any previous output files
-                    try {
-                        ffmpeg.FS('unlink', outputFileName);
-                    } catch (e) {
-                        // File doesn't exist, ignore
-                    }
-
-                    // Build FFmpeg command with proper quality settings
-                    let ffmpegArgs;
-
-                    if (outputFormat === 'mp4' || outputFormat === 'mkv') {
-                        // For H.264: Use 2-pass encoding for accurate target size with good quality
-                        ffmpegArgs = [
-                            '-i', 'input.mp4',
-                            '-c:v', 'libx264',
-                            '-b:v', targetBitrate,
-                            '-maxrate', targetBitrate,
-                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
-                            '-c:a', 'aac',
-                            '-b:a', audioBitrate,
-                            '-preset', 'slow', // Better quality
-                            '-profile:v', 'high', // High profile for better quality
-                            '-level', '4.1',
-                            '-movflags', '+faststart', // Fast start for web playback
-                            '-pix_fmt', 'yuv420p',
-                            outputFileName
-                        ];
-                    } else if (outputFormat === 'webm') {
-                        // For VP8/WebM: Use constrained quality mode
-                        ffmpegArgs = [
-                            '-i', 'input.mp4',
-                            '-c:v', 'libvpx',
-                            '-b:v', targetBitrate,
-                            '-maxrate', targetBitrate,
-                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
-                            '-qmin', '10',
-                            '-qmax', '42',
-                            '-c:a', 'libvorbis',
-                            '-b:a', audioBitrate,
-                            '-quality', 'good',
-                            '-cpu-used', '0', // Best quality (slower)
-                            outputFileName
-                        ];
-                    } else {
-                        // For AVI and others
-                        ffmpegArgs = [
-                            '-i', 'input.mp4',
-                            '-c:v', getVideoCodec(outputFormat),
-                            '-b:v', targetBitrate,
-                            '-maxrate', targetBitrate,
-                            '-bufsize', (parseInt(targetBitrate) * 2) + '',
-                            '-c:a', getAudioCodec(outputFormat),
-                            '-b:a', audioBitrate,
-                            '-q:v', '3', // Quality setting (lower = better)
-                            outputFileName
-                        ];
-                    }
-
-                    progressText.textContent = 'Starting video compression...';
-
-                    // Execute FFmpeg command (progress callback will update status)
-                    await ffmpeg.run(...ffmpegArgs);
-
-                    progressText.textContent = 'Finalizing and packaging compressed video...';
-                    progressFill.style.width = '95%';
-                    progressFill.textContent = '95%';
-
-                    // Read the output file
-                    const data = ffmpeg.FS('readFile', outputFileName);
-                    compressedVideoBlob = new Blob([data.buffer], { type: `video/${outputFormat}` });
-
-                    // Display results
-                    displayVideoResult(currentVideoFile, compressedVideoBlob, outputFormat);
-
-                    progressFill.style.width = '100%';
-                    progressFill.textContent = '100%';
-                    progressText.textContent = 'Compression complete!';
-
-                    setTimeout(() => {
-                        videoProgress.classList.add('hidden');
-                    }, 1500);
-
-                } catch (error) {
-                    console.error('Video compression error:', error);
-
-                    let errorMessage = error.message;
-
-                    // Provide helpful error messages
-                    if (error.message.includes('SharedArrayBuffer')) {
-                        errorMessage = 'Video compression requires a secure context (HTTPS). Please deploy this tool to a web server with HTTPS to use video compression features.';
-                    } else if (error.message.includes('codec') || error.message.includes('encoder')) {
-                        errorMessage = 'The selected output format may not be fully supported. Try using MP4 format instead.';
-                    }
-
-                    alert('Error compressing video: ' + errorMessage);
-                    videoProgress.classList.add('hidden');
-                    compressVideoBtn.disabled = false;
-                }
-            });
-
-            // Download compressed video button handler
-            downloadVideoBtn.addEventListener('click', () => {
-                if (!compressedVideoBlob) return;
-
-                const outputFormat = document.getElementById('video-format').value;
-                const originalName = currentVideoFile.name.substring(0, currentVideoFile.name.lastIndexOf('.')) || currentVideoFile.name;
-                const fileName = `${originalName}_compressed.${outputFormat}`;
-
-                const url = URL.createObjectURL(compressedVideoBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
-
-            // Helper functions
-            function calculateBitrate(targetSizeKB, durationInSeconds) {
-                // More accurate bitrate calculation
-                const targetSizeBytes = targetSizeKB * 1024;
-                const audioBitrateKbps = 128; // 128 kbps for audio
-
-                // Calculate audio size: (bitrate in kbps * duration in seconds * 1024 bits) / 8 bits per byte
-                const audioSizeBytes = (audioBitrateKbps * durationInSeconds * 1024) / 8;
-
-                // Remaining size for video (with 5% overhead for container)
-                const videoSizeBytes = (targetSizeBytes - audioSizeBytes) * 0.95;
-
-                // Calculate video bitrate: (size in bytes * 8 bits per byte) / duration in seconds
-                const videoBitrateBps = (videoSizeBytes * 8) / durationInSeconds;
-
-                // Convert to kbps for better readability in logs
-                const bitrateKbps = Math.floor(videoBitrateBps / 1024);
-
-                // Ensure minimum quality bitrate (256kbps min, but prefer 500kbps+)
-                const finalBitrateKbps = Math.max(bitrateKbps, 256);
-
-                // Return as string with 'k' suffix for FFmpeg
-                return finalBitrateKbps + 'k';
-            }
-
-            function getVideoDuration(file) {
-                return new Promise((resolve) => {
-                    const video = document.createElement('video');
-                    video.preload = 'metadata';
-                    video.onloadedmetadata = function() {
-                        window.URL.revokeObjectURL(video.src);
-                        resolve(video.duration);
-                    }
-                    video.src = URL.createObjectURL(file);
-                });
-            }
-
-            function getVideoCodec(format) {
-                const codecs = {
-                    'mp4': 'libx264',
-                    'webm': 'libvpx', // Using libvpx (VP8) for better compatibility
-                    'avi': 'mpeg4',
-                    'mkv': 'libx264'
-                };
-                return codecs[format] || 'libx264';
-            }
-
-            function getAudioCodec(format) {
-                const codecs = {
-                    'mp4': 'aac',
-                    'webm': 'libvorbis', // Using Vorbis for better compatibility with VP8
-                    'avi': 'libmp3lame',
-                    'mkv': 'aac'
-                };
-                return codecs[format] || 'aac';
-            }
-
-            function displayVideoResult(originalFile, compressedBlob, format) {
-                const originalSize = originalFile.size;
-                const compressedSize = compressedBlob.size;
-                const reduction = ((originalSize - compressedSize) / originalSize) * 100;
-
-                document.getElementById('compressed-video-size').textContent = `Size: ${formatBytes(compressedSize)}`;
-                document.getElementById('compression-ratio').textContent =
-                    `Compression: ${reduction.toFixed(2)}% reduction (${formatBytes(originalSize)} → ${formatBytes(compressedSize)})`;
-                document.getElementById('quality-info').textContent = 'Quality: High (H.264 High Profile, Optimized Encoding)';
-
-                // Show preview
-                const previewVideo = document.getElementById('preview-video');
-                previewVideo.src = URL.createObjectURL(compressedBlob);
-
-                videoOutput.classList.remove('hidden');
-                downloadVideoBtn.classList.remove('hidden');
-                downloadVideoBtn.disabled = false;
-                compressVideoBtn.disabled = false;
-            }
-        }
+        // Video compression functionality has been moved to ../video-compressor/
+        // This page now focuses exclusively on image compression and conversion
     </script>
 </body>
 
