@@ -141,42 +141,42 @@ body {
 .shape {
     position: absolute;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.7;
+    filter: blur(40px);
+    opacity: 0.8;
     animation: float 20s infinite ease-in-out;
 }
 
 .shape-1 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, #8b9ff5, #9d6cc0);
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #9bb0ff, #b88edb);
     top: 10%;
     left: 10%;
     animation-delay: 0s;
 }
 
 .shape-2 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, #ffb3fc, #ff7a8f);
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #ffc6fc, #ff94a8);
     top: 50%;
     right: 10%;
     animation-delay: 5s;
 }
 
 .shape-3 {
-    width: 350px;
-    height: 350px;
-    background: linear-gradient(135deg, #6fbfff, #33f5ff);
+    width: 450px;
+    height: 450px;
+    background: linear-gradient(135deg, #8dd4ff, #5ff8ff);
     bottom: 20%;
     left: 20%;
     animation-delay: 10s;
 }
 
 .shape-4 {
-    width: 450px;
-    height: 450px;
-    background: linear-gradient(135deg, #60ff9f, #55ffe3);
+    width: 550px;
+    height: 550px;
+    background: linear-gradient(135deg, #7fffb3, #6dffe8);
     bottom: 10%;
     right: 30%;
     animation-delay: 15s;
