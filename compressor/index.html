@@ -52,6 +52,113 @@
             color: #333;
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Hero Background Animation */
+        .hero-background-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg,
+                rgba(102, 126, 234, 0.1) 0%,
+                rgba(118, 75, 162, 0.1) 50%,
+                rgba(240, 147, 251, 0.1) 100%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            top: 50%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+
+        .shape-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 10s;
+        }
+
+        .shape-4 {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            bottom: 10%;
+            right: 30%;
+            animation-delay: 15s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
         }
 
         .brand-header {
@@ -59,6 +166,8 @@
             color: white;
             padding: 15px 0;
             margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .brand-logo {
@@ -103,6 +212,8 @@
             color: white;
             margin-bottom: 30px;
             padding: 20px 0;
+            position: relative;
+            z-index: 1;
         }
 
         .header h1 {
@@ -119,6 +230,8 @@
         .container {
             max-width: 900px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .tool-section {
@@ -127,6 +240,8 @@
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
         }
 
         .upload-zone {
@@ -867,6 +982,18 @@
 </head>
 
 <body>
+    <!-- Hero Background -->
+    <div class="hero-background-wrapper">
+        <canvas id="particles-canvas"></canvas>
+        <div class="hero-gradient-overlay"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+
     <!-- Brand Header -->
     <div class="brand-header">
         <a href="../" style="text-decoration: none; color: inherit;">
@@ -1425,6 +1552,114 @@
 
         // Video compression functionality has been moved to ../video-compressor/
         // This page now focuses exclusively on image compression and conversion
+    </script>
+
+    <!-- Particle Animation -->
+    <script>
+    function initParticles() {
+        const canvas = document.getElementById('particles-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationId;
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+
+                const colors = [
+                    'rgba(102, 126, 234,',
+                    'rgba(118, 75, 162,',
+                    'rgba(240, 147, 251,',
+                    'rgba(67, 233, 123,'
+                ];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color + this.opacity + ')';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            const particleCount = Math.min(Math.floor((canvas.width * canvas.height) / 15000), 100);
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connectParticles() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        const opacity = (1 - distance / 150) * 0.2;
+                        ctx.strokeStyle = `rgba(102, 126, 234, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            connectParticles();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        createParticles();
+        animate();
+
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initParticles);
     </script>
 </body>
 

@@ -83,8 +83,120 @@ body {
 
 /* Hero Section */
 .hero {
-    padding: 60px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    padding: 80px 0;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+}
+
+#particles-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.hero-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+        rgba(102, 126, 234, 0.1) 0%,
+        rgba(118, 75, 162, 0.1) 50%,
+        rgba(240, 147, 251, 0.1) 100%);
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.floating-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    animation: float 20s infinite ease-in-out;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    top: 50%;
+    right: 10%;
+    animation-delay: 5s;
+}
+
+.shape-3 {
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 10s;
+}
+
+.shape-4 {
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    bottom: 10%;
+    right: 30%;
+    animation-delay: 15s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+}
+
+.hero .container {
+    position: relative;
+    z-index: 1;
     color: var(--white);
     text-align: center;
 }
@@ -94,6 +206,7 @@ body {
     font-weight: 800;
     margin-bottom: 16px;
     line-height: 1.2;
+    color: var(--white);
 }
 
 .hero-subtitle {
@@ -103,6 +216,7 @@ body {
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    color: var(--white);
 }
 
 /* Upload Section */
