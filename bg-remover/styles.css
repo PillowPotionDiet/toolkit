@@ -43,13 +43,18 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
-    padding: 16px 0;
+    padding: 16px 20px;
+    margin: 0;
 }
 
 .header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
 }
 
 .logo {

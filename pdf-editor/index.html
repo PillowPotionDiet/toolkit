@@ -189,16 +189,22 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            padding: 16px 0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
+            margin: 0;
         }
 
         .page-header .container {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0;
         }
 
         .logo {
@@ -898,7 +904,7 @@
         <div class="container">
             <div class="logo">
                 <a href="../" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
-                    <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" style="height: 40px; width: auto;">
+                    <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" style="height: 40px; width: auto; display: block;" onerror="this.style.display='none'">
                     <span class="logo-text" style="font-size: 20px; font-weight: 700; color: #333;">PDF Editor</span>
                 </a>
             </div>
