@@ -183,50 +183,68 @@
             }
         }
 
-        .brand-header {
-            text-align: center;
+        .page-header {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 16px 0;
+        }
+
+        .page-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .page-nav a {
             color: #333;
-            padding: 15px 0;
-            margin-bottom: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .page-nav a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 40px 20px;
             position: relative;
             z-index: 1;
         }
 
-        .brand-logo {
-            max-width: 200px;
-            height: auto;
+        .hero-section h1 {
+            font-size: 2.5em;
             margin-bottom: 10px;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+            color: #333;
         }
 
-        .brand-tagline {
-            font-size: 0.95em;
-            opacity: 0.9;
-            margin-bottom: 20px;
-        }
-
-        .tools-nav {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .tools-nav a {
-            color: #667eea;
-            text-decoration: none;
-            padding: 8px 16px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 6px;
-            font-weight: 600;
-            transition: all 0.3s;
-            font-size: 0.9em;
-        }
-
-        .tools-nav a:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px);
+        .hero-section .subtitle {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 30px;
         }
 
         .header {
@@ -875,23 +893,28 @@
         </div>
     </div>
 
-    <div class="brand-header">
-        <a href="../" style="text-decoration: none; color: inherit;">
-            <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" class="brand-logo">
-        </a>
-        <p class="brand-tagline">Professional PDF Tools Suite</p>
-        <nav class="tools-nav">
-            <a href="../">🏠 Toolkit Home</a>
-            <a href="../compressor/">🖼️ Image Tools</a>
-            <a href="../video-compressor/">🎬 Video Tools</a>
-            <a href="./">📄 PDF Editor</a>
-        </nav>
-    </div>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <div class="logo">
+                <a href="../" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
+                    <img src="https://pillowpotion.com/offers/pillowpotionlogo.webp" alt="PillowPotion Logo" style="height: 40px; width: auto;">
+                    <span class="logo-text" style="font-size: 20px; font-weight: 700; color: #333;">PDF Editor</span>
+                </a>
+            </div>
+            <nav class="page-nav">
+                <a href="../">← Toolkit Home</a>
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+            </nav>
+        </div>
+    </header>
 
-    <header class="header">
+    <!-- Hero Section -->
+    <section class="hero-section">
         <h1>Free PDF Editor - 16 Powerful Tools</h1>
         <p class="subtitle">Merge, Split, Compress, Convert & More - All Client-Side Processing</p>
-    </header>
+    </section>
 
     <div class="container">
         <div id="toolSelector" class="tool-section">
