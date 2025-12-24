@@ -14,13 +14,15 @@ const App = {
 document.addEventListener('DOMContentLoaded', () => {
   console.log(`Website Migration Assistant v${App.version} - ${App.phase}`);
 
-  // Check for WebSocket support
+  // Check for WebSocket support (only when backend is running)
   if (typeof io !== 'undefined') {
     initializeWebSocket();
   }
 
-  // Auto-save session periodically
-  startAutoSave();
+  // Auto-save session periodically (only if Utils is available)
+  if (typeof Utils !== 'undefined') {
+    startAutoSave();
+  }
 });
 
 /**
@@ -53,11 +55,13 @@ function initializeWebSocket() {
 function startAutoSave() {
   // Save session state every 30 seconds
   setInterval(() => {
-    const state = {
-      timestamp: Date.now(),
-      path: window.location.pathname
-    };
-    Utils.setStorage('migration_session', state);
+    if (typeof Utils !== 'undefined' && Utils.setStorage) {
+      const state = {
+        timestamp: Date.now(),
+        path: window.location.pathname
+      };
+      Utils.setStorage('migration_session', state);
+    }
   }, 30000);
 }
 
