@@ -165,6 +165,20 @@
       padding: 3rem;
       color: var(--text-secondary);
     }
+    /* 2-column layout for site cards */
+    .sites-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 768px) {
+      .sites-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .site-card {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>

@@ -16,8 +16,8 @@ const PROVIDERS = {
     name: 'Hostinger',
     type: 'api',
     enabled: true,
-    notes: 'Connect using your Hostinger API token to list your sites.',
-    features: ['API Access', 'Websites', 'Databases', 'Emails'],
+    notes: 'Connect using your Hostinger API token and FTP credentials to discover all your sites.',
+    features: ['API Access', 'Websites', 'Databases', 'Emails', 'FTP Discovery'],
     credentialFields: [
       {
         name: 'apiToken',
@@ -25,6 +25,30 @@ const PROVIDERS = {
         type: 'password',
         placeholder: 'Paste your API token from Account Settings → API',
         required: true
+      },
+      {
+        name: 'ftpHost',
+        label: 'FTP Hostname',
+        type: 'text',
+        placeholder: 'e.g., ftp.yourdomain.com or IP from Plan Details',
+        required: false,
+        helpText: 'Find at: Hosting → Plan Details → FTP Details'
+      },
+      {
+        name: 'ftpUsername',
+        label: 'FTP Username',
+        type: 'text',
+        placeholder: 'e.g., u123456789.yourdomain.com',
+        required: false,
+        helpText: 'Your Hostinger FTP username'
+      },
+      {
+        name: 'ftpPassword',
+        label: 'FTP Password',
+        type: 'password',
+        placeholder: 'Your FTP password',
+        required: false,
+        helpText: 'Usually same as your Hostinger account password'
       }
     ],
     helpUrl: 'https://support.hostinger.com/en/articles/6307182-how-to-create-an-api-token'
@@ -238,7 +262,7 @@ function buildCredentialForm(provider) {
 
       const label = document.createElement('label');
       label.className = `form-label ${field.required ? 'form-label-required' : ''}`;
-      label.textContent = field.label;
+      label.textContent = field.label + (field.required ? '' : ' (Optional)');
       label.setAttribute('for', field.name);
 
       const input = document.createElement('input');
@@ -251,6 +275,15 @@ function buildCredentialForm(provider) {
 
       formGroup.appendChild(label);
       formGroup.appendChild(input);
+
+      // Add help text if provided
+      if (field.helpText) {
+        const helpText = document.createElement('small');
+        helpText.style.cssText = 'color: var(--text-tertiary); display: block; margin-top: 0.25rem;';
+        helpText.textContent = field.helpText;
+        formGroup.appendChild(helpText);
+      }
+
       credentialFields.appendChild(formGroup);
     });
   }
@@ -428,13 +461,24 @@ async function connectToProvider() {
           }
         });
 
-        // Save to localStorage
-        Utils.setStorage('migration_provider', {
+        // Save to localStorage (including FTP credentials if provided)
+        const providerData = {
           id: selectedProvider.id,
           name: selectedProvider.name,
-          apiToken: credentials.apiToken, // Stored for subsequent API calls
+          apiToken: credentials.apiToken,
           user: data.user
-        });
+        };
+
+        // Add FTP credentials if provided
+        if (credentials.ftpHost && credentials.ftpUsername && credentials.ftpPassword) {
+          providerData.ftp = {
+            host: credentials.ftpHost,
+            username: credentials.ftpUsername,
+            password: credentials.ftpPassword
+          };
+        }
+
+        Utils.setStorage('migration_provider', providerData);
 
         Utils.toggleElement('nextStepBtn', true);
       } else {
@@ -463,12 +507,24 @@ async function connectToProvider() {
           }
         });
 
-        Utils.setStorage('migration_provider', {
+        // Save to localStorage (including FTP credentials if provided)
+        const providerData = {
           id: selectedProvider.id,
           name: selectedProvider.name,
           apiToken: credentials.apiToken,
           demo: true
-        });
+        };
+
+        // Add FTP credentials if provided
+        if (credentials.ftpHost && credentials.ftpUsername && credentials.ftpPassword) {
+          providerData.ftp = {
+            host: credentials.ftpHost,
+            username: credentials.ftpUsername,
+            password: credentials.ftpPassword
+          };
+        }
+
+        Utils.setStorage('migration_provider', providerData);
 
         Utils.toggleElement('nextStepBtn', true);
       } else {

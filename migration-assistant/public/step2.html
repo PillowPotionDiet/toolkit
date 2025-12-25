@@ -4,51 +4,444 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Step 2: Select Sites - Website Migration Assistant</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .site-card {
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s ease;
+    }
+    .site-card:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .site-card.selected {
+      border-color: var(--success-color);
+      background: #f0fdf4;
+    }
+    .site-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .site-checkbox {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: var(--success-color);
+    }
+    .site-info {
+      flex: 1;
+    }
+    .site-domain {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .site-path {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .cms-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .cms-wordpress { background: #21759b; color: white; }
+    .cms-joomla { background: #5091cd; color: white; }
+    .cms-drupal { background: #0077c0; color: white; }
+    .cms-laravel { background: #ff2d20; color: white; }
+    .cms-custom { background: #6b7280; color: white; }
+    .cms-static { background: #10b981; color: white; }
+    .git-badge {
+      background: #f97316;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .site-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    .site-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+    }
+    .selection-bar {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 2px solid var(--border-color);
+      padding: 1rem;
+      margin: 0 -1.5rem -1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .selection-info {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+    .selection-info strong {
+      color: var(--primary-color);
+    }
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      background: white;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--primary-color);
+    }
+    .filter-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+    }
+    .loading-sites {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    .no-sites {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    /* 2-column layout for site cards */
+    .sites-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 768px) {
+      .sites-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .site-card {
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body>
   <header class="header">
     <div class="container">
       <div class="header-content">
-        <a href="/" class="logo">
+        <a href="./" class="logo">
           <span class="logo-icon">🚀</span>
           Website Migration Assistant
         </a>
+        <nav style="margin-left: auto;">
+          <a href="../" style="color: white; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 6px;">← Toolkit Home</a>
+        </nav>
       </div>
     </div>
   </header>
 
   <main class="main-content">
     <div class="container-sm">
-      <div class="card text-center">
-        <div class="card-body">
-          <h1 style="font-size: 2rem; margin-bottom: 1rem; color: var(--warning-color);">
-            ⚠️ Step 2: Coming Soon
-          </h1>
-          <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2rem;">
-            This step will be implemented in <strong>Phase 2</strong>
+      <!-- Progress Steps -->
+      <div class="progress-steps">
+        <div class="step completed">
+          <div class="step-circle">✓</div>
+          <span class="step-label">Old Account</span>
+        </div>
+        <div class="step active">
+          <div class="step-circle">2</div>
+          <span class="step-label">Select Sites</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">3</div>
+          <span class="step-label">New Account</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">4</div>
+          <span class="step-label">Migrate</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">5</div>
+          <span class="step-label">Emails</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">6</div>
+          <span class="step-label">DNS</span>
+        </div>
+        <div class="step">
+          <div class="step-circle">7</div>
+          <span class="step-label">Complete</span>
+        </div>
+      </div>
+
+      <!-- Connection Status Banner -->
+      <div id="connectionBanner" class="alert alert-success" style="margin-bottom: 1.5rem;">
+        <strong>Connected to:</strong> <span id="connectedProvider">Hostinger</span>
+        <span style="margin-left: 1rem; opacity: 0.8;">(<span id="connectedUser">demo_user</span>)</span>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Step 2: Select Sites to Migrate</h1>
+          <p class="card-description">
+            Choose which websites you want to migrate from your Hostinger account.
           </p>
+        </div>
 
-          <div style="text-align: left; max-width: 500px; margin: 0 auto;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 1rem;">What's Coming in Phase 2:</h2>
-            <ul style="list-style: none; padding: 0;">
-              <li style="padding: 0.75rem 0;">✅ List all sites from your old hosting</li>
-              <li style="padding: 0.75rem 0;">✅ Detect CMS type (WordPress, Joomla, Drupal)</li>
-              <li style="padding: 0.75rem 0;">✅ Show site sizes and email counts</li>
-              <li style="padding: 0.75rem 0;">✅ Detect Git-based sites</li>
-              <li style="padding: 0.75rem 0;">✅ Select sites for migration</li>
-              <li style="padding: 0.75rem 0;">✅ Download sites to computer (optional)</li>
-            </ul>
+        <div class="card-body">
+          <!-- Alert Container -->
+          <div id="alertContainer"></div>
+
+          <!-- Sites Count & Filter Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div class="sites-count" style="font-size: 1.1rem;">
+              <strong id="totalSitesCount">0</strong> sites found
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-outline btn-sm" id="selectAllBtn">Select All</button>
+              <button class="btn btn-outline btn-sm" id="deselectAllBtn">Deselect All</button>
+            </div>
           </div>
 
-          <div style="margin-top: 2rem;">
-            <a href="/step1" class="btn btn-primary">
-              ← Back to Step 1
-            </a>
+          <!-- Search Bar -->
+          <div class="filter-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search sites...">
           </div>
+
+          <!-- Sites List -->
+          <div id="sitesList">
+            <div class="loading-sites">
+              <div class="loading loading-lg" style="margin: 0 auto 1rem;"></div>
+              <p>Scanning your hosting account for sites...</p>
+            </div>
+          </div>
+
+          <!-- Selection Bar -->
+          <div class="selection-bar" id="selectionBar" style="display: none;">
+            <div class="selection-info">
+              <strong id="selectedCount">0</strong> sites selected
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <a href="step1.html" class="btn btn-secondary">
+            ← Back to Step 1
+          </a>
+          <button class="btn btn-primary" id="nextStepBtn" disabled>
+            Next: Connect New Account →
+          </button>
+        </div>
+      </div>
+
+      <!-- Download Options Card -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <h2 class="card-title">Download Options</h2>
+          <p class="card-description">Optionally download selected sites to your computer before migration</p>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" id="downloadFilesBtn" disabled>
+              📁 Download Files (ZIP)
+            </button>
+            <button class="btn btn-outline" id="downloadDbBtn" disabled>
+              🗄️ Download Databases (SQL)
+            </button>
+            <button class="btn btn-outline" id="downloadAllBtn" disabled>
+              📦 Download Everything
+            </button>
+          </div>
+          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-tertiary);">
+            <strong>Note:</strong> Downloads are processed in demo mode. In the full version, files would be downloaded from your hosting account.
+          </p>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-content">
+      <div class="loading loading-lg" style="border-color: var(--border-color); border-top-color: var(--primary-color);"></div>
+      <p id="loadingText" style="margin-top: 1rem; color: var(--text-secondary);">Processing...</p>
+    </div>
+  </div>
+
+  <!-- FTP Credentials Modal -->
+  <div id="ftpModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔐 FTP Credentials Required</h2>
+        <button class="modal-close" onclick="closeFtpModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+          To migrate your selected sites, we need FTP access to download the files.
+          Find these details in your Hostinger panel under <strong>Plan Details → FTP Details</strong>.
+        </p>
+
+        <form id="ftpForm">
+          <div class="form-group">
+            <label class="form-label form-label-required">FTP Hostname</label>
+            <input type="text" id="ftpHost" name="ftpHost" class="form-input"
+                   placeholder="e.g., automation.pillowpotion.com or 147.93.117.71" required>
+            <small style="color: var(--text-tertiary);">Find at: Plan Details → FTP Details → FTP Hostname or FTP IP</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label-required">FTP Username</label>
+            <input type="text" id="ftpUsername" name="ftpUsername" class="form-input"
+                   placeholder="e.g., u309775850.automation.pillowpotion.com" required>
+            <small style="color: var(--text-tertiary);">Find at: Plan Details → FTP Details → FTP Username</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label form-label-required">FTP Password</label>
+            <input type="password" id="ftpPassword" name="ftpPassword" class="form-input"
+                   placeholder="Your FTP password" required>
+            <small style="color: var(--text-tertiary);">Your Hostinger account password or FTP-specific password</small>
+          </div>
+
+          <div class="form-group" style="padding: 1rem; background: #EFF6FF; border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+              <span style="font-size: 1.25rem;">💡</span>
+              <div>
+                <strong style="color: var(--info-color);">Where to find FTP details?</strong>
+                <p style="margin-top: 0.25rem; font-size: 0.9rem; color: var(--text-secondary);">
+                  1. Go to <strong>hpanel.hostinger.com</strong><br>
+                  2. Select your website<br>
+                  3. Click <strong>Hosting</strong> → <strong>Plan Details</strong><br>
+                  4. Scroll to <strong>FTP Details</strong> section
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeFtpModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="ftpSubmitBtn">
+              <span id="ftpBtnIcon">🔌</span>
+              <span id="ftpBtnText">Connect & Continue</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .modal-overlay.hidden {
+      display: none;
+    }
+    .modal-content {
+      background: white;
+      border-radius: var(--radius-lg);
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h2 {
+      font-size: 1.25rem;
+      margin: 0;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.75rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      line-height: 1;
+      padding: 0;
+    }
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+    .modal-body {
+      padding: 1.5rem;
+    }
+  </style>
+
+  <script src="js/utils.js"></script>
+  <script src="js/step2.js"></script>
 </body>
 </html>

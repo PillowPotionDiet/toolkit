@@ -63,6 +63,10 @@ export default {
         return await handleListEmails(request, env, origin);
       }
 
+      if (path === '/api/discover-sites') {
+        return await handleDiscoverSites(request, env, origin);
+      }
+
       // Health check
       if (path === '/api/health') {
         return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() }, origin);
@@ -538,6 +542,170 @@ async function handleListDatabases(request, env, origin) {
     return jsonResponse({
       success: false,
       error: 'Failed to list databases: ' + error.message
+    }, origin, 500);
+  }
+}
+
+/**
+ * Discover sites using file manager API
+ * This attempts to list directories in domains/ folder to find all sites
+ */
+async function handleDiscoverSites(request, env, origin) {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, origin, 405);
+  }
+
+  const body = await request.json();
+  const { apiToken, subscriptionId } = body;
+
+  if (!apiToken) {
+    return jsonResponse({ error: 'API token required' }, origin, 400);
+  }
+
+  try {
+    const discoveredSites = [];
+    const debug = {
+      vhostsStatus: null,
+      fileListStatus: null,
+      subscriptionsStatus: null
+    };
+
+    // 1. Try to get virtual hosts list (this often contains all domain configs)
+    const vhostsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/hosting/v1/virtual-hosts`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    debug.vhostsStatus = vhostsResponse.status;
+
+    if (vhostsResponse.ok) {
+      const vhostsData = await vhostsResponse.json();
+      const vhosts = Array.isArray(vhostsData) ? vhostsData : (vhostsData.data || vhostsData.virtual_hosts || []);
+
+      vhosts.forEach((vhost) => {
+        const domain = vhost.domain || vhost.server_name || vhost.hostname;
+        if (domain && domain.includes('.') && !discoveredSites.some(s => s.domain === domain)) {
+          discoveredSites.push({
+            id: discoveredSites.length + 1,
+            domain: domain,
+            path: vhost.document_root || vhost.path || '/public_html',
+            cms: 'unknown',
+            hasGit: false,
+            stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+            source: 'vhost'
+          });
+        }
+      });
+    }
+
+    // 2. Try to list files in domains directory for each subscription
+    const subscriptionsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    debug.subscriptionsStatus = subscriptionsResponse.status;
+
+    if (subscriptionsResponse.ok) {
+      const subsData = await subscriptionsResponse.json();
+      const subscriptions = Array.isArray(subsData) ? subsData : (subsData.data || []);
+
+      // For each subscription, try to list files
+      for (const sub of subscriptions) {
+        const subId = sub.id || sub.subscription_id;
+        if (!subId) continue;
+
+        // Try file manager endpoint
+        const fileListResponse = await fetch(
+          `${HOSTINGER_API_BASE}/api/hosting/v1/hosting/${subId}/files?path=/domains`,
+          {
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        debug.fileListStatus = fileListResponse.status;
+
+        if (fileListResponse.ok) {
+          const fileData = await fileListResponse.json();
+          const files = Array.isArray(fileData) ? fileData : (fileData.data || fileData.files || []);
+
+          files.forEach((file) => {
+            // Directories in /domains are usually domain names
+            if (file.type === 'directory' || file.is_dir) {
+              const domain = file.name || file.filename;
+              if (domain && domain.includes('.') && !discoveredSites.some(s => s.domain === domain)) {
+                discoveredSites.push({
+                  id: discoveredSites.length + 1,
+                  domain: domain,
+                  path: `/domains/${domain}/public_html`,
+                  cms: 'unknown',
+                  hasGit: false,
+                  stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+                  source: 'file_manager'
+                });
+              }
+            }
+          });
+        }
+
+        // Also try /home/username/domains path
+        const homeFileResponse = await fetch(
+          `${HOSTINGER_API_BASE}/api/hosting/v1/hosting/${subId}/files?path=/`,
+          {
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (homeFileResponse.ok) {
+          const homeData = await homeFileResponse.json();
+          const homeFiles = Array.isArray(homeData) ? homeData : (homeData.data || homeData.files || []);
+
+          homeFiles.forEach((file) => {
+            if ((file.type === 'directory' || file.is_dir) && file.name && file.name.includes('.')) {
+              const domain = file.name;
+              if (!discoveredSites.some(s => s.domain === domain)) {
+                discoveredSites.push({
+                  id: discoveredSites.length + 1,
+                  domain: domain,
+                  path: `/${domain}`,
+                  cms: 'unknown',
+                  hasGit: false,
+                  stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+                  source: 'home_directory'
+                });
+              }
+            }
+          });
+        }
+      }
+    }
+
+    return jsonResponse({
+      success: true,
+      sites: discoveredSites,
+      debug: debug,
+      message: discoveredSites.length > 0
+        ? `Discovered ${discoveredSites.length} site(s) via file manager API`
+        : 'No additional sites found via file manager. The hosting API may not expose file listing.'
+    }, origin);
+
+  } catch (error) {
+    return jsonResponse({
+      success: false,
+      error: 'Failed to discover sites: ' + error.message
     }, origin, 500);
   }
 }
