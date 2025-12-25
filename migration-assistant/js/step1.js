@@ -16,8 +16,8 @@ const PROVIDERS = {
     name: 'Hostinger',
     type: 'api',
     enabled: true,
-    notes: 'Connect using your Hostinger API token and FTP credentials to discover all your sites.',
-    features: ['API Access', 'Websites', 'Databases', 'Emails', 'FTP Discovery'],
+    notes: 'Connect using your Hostinger API token to discover all your websites.',
+    features: ['API Access', 'Websites', 'Databases', 'Emails'],
     credentialFields: [
       {
         name: 'apiToken',
@@ -25,30 +25,6 @@ const PROVIDERS = {
         type: 'password',
         placeholder: 'Paste your API token from Account Settings → API',
         required: true
-      },
-      {
-        name: 'ftpHost',
-        label: 'FTP Hostname',
-        type: 'text',
-        placeholder: 'e.g., ftp.yourdomain.com or IP from Plan Details',
-        required: false,
-        helpText: 'Find at: Hosting → Plan Details → FTP Details'
-      },
-      {
-        name: 'ftpUsername',
-        label: 'FTP Username',
-        type: 'text',
-        placeholder: 'e.g., u123456789.yourdomain.com',
-        required: false,
-        helpText: 'Your Hostinger FTP username'
-      },
-      {
-        name: 'ftpPassword',
-        label: 'FTP Password',
-        type: 'password',
-        placeholder: 'Your FTP password',
-        required: false,
-        helpText: 'Usually same as your Hostinger account password'
       }
     ],
     helpUrl: 'https://support.hostinger.com/en/articles/6307182-how-to-create-an-api-token'
@@ -461,22 +437,13 @@ async function connectToProvider() {
           }
         });
 
-        // Save to localStorage (including FTP credentials if provided)
+        // Save to localStorage
         const providerData = {
           id: selectedProvider.id,
           name: selectedProvider.name,
           apiToken: credentials.apiToken,
           user: data.user
         };
-
-        // Add FTP credentials if provided
-        if (credentials.ftpHost && credentials.ftpUsername && credentials.ftpPassword) {
-          providerData.ftp = {
-            host: credentials.ftpHost,
-            username: credentials.ftpUsername,
-            password: credentials.ftpPassword
-          };
-        }
 
         Utils.setStorage('migration_provider', providerData);
 
@@ -507,22 +474,13 @@ async function connectToProvider() {
           }
         });
 
-        // Save to localStorage (including FTP credentials if provided)
+        // Save to localStorage
         const providerData = {
           id: selectedProvider.id,
           name: selectedProvider.name,
           apiToken: credentials.apiToken,
           demo: true
         };
-
-        // Add FTP credentials if provided
-        if (credentials.ftpHost && credentials.ftpUsername && credentials.ftpPassword) {
-          providerData.ftp = {
-            host: credentials.ftpHost,
-            username: credentials.ftpUsername,
-            password: credentials.ftpPassword
-          };
-        }
 
         Utils.setStorage('migration_provider', providerData);
 

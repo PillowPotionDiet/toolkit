@@ -1428,11 +1428,21 @@
             },
 
             'split': {
+                currentFile: null,
+                pdfData: null,
+                selectedPages: new Set(),
+                totalPages: 0,
+
                 init() {
+                    this.currentFile = null;
+                    this.pdfData = null;
+                    this.selectedPages = new Set();
+                    this.totalPages = 0;
+
                     document.getElementById('workspaceTitle').textContent = 'Split PDF';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>How it works:</strong> Upload a PDF and extract specific pages. This feature will be fully implemented with page thumbnails and selection.
+                            <strong>How it works:</strong> Upload a PDF, select the pages you want to extract, and create a new PDF with only those pages.
                         </div>
 
                         <div class="upload-zone" id="splitUploadZone">
@@ -1443,26 +1453,207 @@
                         </div>
 
                         <div class="file-list" id="splitFileList"></div>
+                        <div id="splitPagesContainer" style="display: none;">
+                            <div style="margin: 20px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <button class="secondary-btn" style="flex: 0 0 auto; padding: 10px 20px;" onclick="Tools.split.selectAll()">Select All</button>
+                                <button class="secondary-btn" style="flex: 0 0 auto; padding: 10px 20px;" onclick="Tools.split.deselectAll()">Deselect All</button>
+                                <span id="selectionCount" style="color: #666; font-weight: 600;"></span>
+                            </div>
+                            <div class="page-thumbnails" id="splitPageThumbnails"></div>
+                            <div class="action-buttons">
+                                <button class="primary-btn" id="extractBtn" disabled>Extract Selected Pages</button>
+                            </div>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('splitUploadZone');
                     const fileInput = document.getElementById('splitFileInput');
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full split functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('extractBtn').addEventListener('click', () => this.extractPages());
+                },
+
+                async handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+                    UIManager.showLoading('Loading PDF pages...');
+
+                    try {
+                        this.pdfData = await Utils.fileToArrayBuffer(file);
+                        const pdf = await pdfjsLib.getDocument({ data: this.pdfData }).promise;
+                        this.totalPages = pdf.numPages;
+
+                        document.getElementById('splitFileList').innerHTML = `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div>
+                                        <div class="file-name">${file.name}</div>
+                                        <div class="file-size">${Utils.formatFileSize(file.size)} • ${this.totalPages} pages</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        await this.renderThumbnails();
+                        document.getElementById('splitPagesContainer').style.display = 'block';
+                        UIManager.hideLoading();
+
+                    } catch (error) {
+                        console.error('Error loading PDF:', error);
+                        Utils.showError('Failed to load PDF. Please try again.');
+                        UIManager.hideLoading();
+                    }
+                },
+
+                async renderThumbnails() {
+                    const container = document.getElementById('splitPageThumbnails');
+                    container.innerHTML = '';
+
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        const thumbnail = document.createElement('div');
+                        thumbnail.className = 'page-thumbnail';
+                        thumbnail.innerHTML = `
+                            <canvas></canvas>
+                            <div class="page-number">Page ${i}</div>
+                        `;
+
+                        thumbnail.addEventListener('click', () => this.togglePage(i, thumbnail));
+                        container.appendChild(thumbnail);
+
+                        const canvas = thumbnail.querySelector('canvas');
+                        await Utils.renderPDFThumbnail(this.pdfData, i, canvas, 0.5);
+                    }
+                },
+
+                togglePage(pageNum, element) {
+                    if (this.selectedPages.has(pageNum)) {
+                        this.selectedPages.delete(pageNum);
+                        element.classList.remove('selected');
+                    } else {
+                        this.selectedPages.add(pageNum);
+                        element.classList.add('selected');
+                    }
+
+                    this.updateSelectionCount();
+                },
+
+                selectAll() {
+                    this.selectedPages.clear();
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        this.selectedPages.add(i);
+                    }
+                    document.querySelectorAll('.page-thumbnail').forEach(el => el.classList.add('selected'));
+                    this.updateSelectionCount();
+                },
+
+                deselectAll() {
+                    this.selectedPages.clear();
+                    document.querySelectorAll('.page-thumbnail').forEach(el => el.classList.remove('selected'));
+                    this.updateSelectionCount();
+                },
+
+                updateSelectionCount() {
+                    const count = this.selectedPages.size;
+                    document.getElementById('selectionCount').textContent =
+                        count > 0 ? `${count} page${count > 1 ? 's' : ''} selected` : 'No pages selected';
+                    document.getElementById('extractBtn').disabled = count === 0;
+                },
+
+                async extractPages() {
+                    if (this.selectedPages.size === 0) {
+                        alert('Please select at least one page to extract');
+                        return;
+                    }
+
+                    try {
+                        UIManager.showLoading('Extracting pages...');
+                        Utils.showProgress(0, 'Creating new PDF...');
+
+                        const { PDFDocument } = PDFLib;
+                        const sourcePdf = await PDFDocument.load(this.pdfData);
+                        const newPdf = await PDFDocument.create();
+
+                        const sortedPages = Array.from(this.selectedPages).sort((a, b) => a - b);
+
+                        for (let i = 0; i < sortedPages.length; i++) {
+                            const progress = ((i + 1) / sortedPages.length) * 100;
+                            Utils.showProgress(progress, `Extracting page ${i + 1} of ${sortedPages.length}...`);
+
+                            const [copiedPage] = await newPdf.copyPages(sourcePdf, [sortedPages[i] - 1]);
+                            newPdf.addPage(copiedPage);
+                        }
+
+                        Utils.showProgress(100, 'Saving PDF...');
+                        const pdfBytes = await newPdf.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">extracted-pages.pdf</div>
+                                        <div class="result-stats">
+                                            ${sortedPages.length} page${sortedPages.length > 1 ? 's' : ''} extracted • ${Utils.formatFileSize(blob.size)}
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools.split.downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess('Pages extracted successfully!');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Extract error:', error);
+                        Utils.showError('Failed to extract pages. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob) {
+                        Utils.downloadFile(this.resultBlob, 'extracted-pages.pdf');
+                    }
                 }
             },
 
             'compress': {
+                currentFile: null,
+
                 init() {
+                    this.currentFile = null;
+
                     document.getElementById('workspaceTitle').textContent = 'Compress PDF';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box warning">
-                            <strong>Limited compression:</strong> Client-side compression removes metadata (5-15% reduction). For maximum compression, use server-based tools.
+                            <strong>Client-side compression:</strong> Removes metadata and optimizes structure (typically 5-15% reduction). For maximum compression with image optimization, use server-based tools.
                         </div>
 
                         <div class="upload-zone" id="compressUploadZone">
@@ -1473,17 +1664,129 @@
                         </div>
 
                         <div class="file-list" id="compressFileList"></div>
+
+                        <div class="action-buttons" id="compressActions" style="display: none;">
+                            <button class="primary-btn" id="compressBtn">Compress PDF</button>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('compressUploadZone');
                     const fileInput = document.getElementById('compressFileInput');
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full compress functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('compressBtn').addEventListener('click', () => this.compress());
+                },
+
+                handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+
+                    document.getElementById('compressFileList').innerHTML = `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-icon">📄</div>
+                                <div>
+                                    <div class="file-name">${file.name}</div>
+                                    <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('compressActions').style.display = 'flex';
+                },
+
+                async compress() {
+                    if (!this.currentFile) return;
+
+                    try {
+                        UIManager.showLoading('Compressing PDF...');
+                        Utils.showProgress(0, 'Loading PDF...');
+
+                        const originalSize = this.currentFile.size;
+                        const arrayBuffer = await Utils.fileToArrayBuffer(this.currentFile);
+
+                        Utils.showProgress(30, 'Analyzing PDF structure...');
+                        const { PDFDocument } = PDFLib;
+                        const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+                        // Remove metadata to reduce size
+                        Utils.showProgress(50, 'Removing metadata...');
+                        pdfDoc.setTitle('');
+                        pdfDoc.setAuthor('');
+                        pdfDoc.setSubject('');
+                        pdfDoc.setKeywords([]);
+                        pdfDoc.setProducer('');
+                        pdfDoc.setCreator('');
+
+                        Utils.showProgress(70, 'Optimizing structure...');
+                        // Save with optimization
+                        const compressedBytes = await pdfDoc.save({
+                            useObjectStreams: false,
+                            addDefaultPage: false,
+                            objectsPerTick: 50
+                        });
+
+                        Utils.showProgress(100, 'Finalizing...');
+                        const blob = new Blob([compressedBytes], { type: 'application/pdf' });
+                        const compressedSize = blob.size;
+                        const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">compressed-${this.currentFile.name}</div>
+                                        <div class="result-stats">
+                                            Original: ${Utils.formatFileSize(originalSize)} → Compressed: ${Utils.formatFileSize(compressedSize)}
+                                            <br>
+                                            <strong style="color: #43e97b;">Reduced by ${reduction}%</strong>
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools.compress.downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess(`PDF compressed successfully! Reduced by ${reduction}%`);
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Compression error:', error);
+                        Utils.showError('Failed to compress PDF. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob && this.currentFile) {
+                        Utils.downloadFile(this.resultBlob, `compressed-${this.currentFile.name}`);
+                    }
                 }
             },
 
@@ -1548,41 +1851,234 @@
             },
 
             'jpg-to-pdf': {
+                files: [],
+
                 init() {
+                    this.files = [];
+
                     document.getElementById('workspaceTitle').textContent = 'JPG to PDF';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>Convert images to PDF:</strong> Upload one or more images (JPG, PNG, WEBP) and convert them into a single PDF file.
+                            <strong>Convert images to PDF:</strong> Upload one or more images (JPG, PNG, WEBP) and combine them into a single PDF file.
                         </div>
 
                         <div class="upload-zone" id="jpgToPdfUploadZone">
                             <input type="file" id="jpgToPdfFileInput" accept="image/*" multiple>
-                            <div class="upload-icon">📁</div>
+                            <div class="upload-icon">🖼️</div>
                             <div class="upload-text">Drop image files here or click to browse</div>
-                            <div class="upload-hint">Upload JPG, PNG, WEBP • Max 50MB each</div>
+                            <div class="upload-hint">Upload JPG, PNG, WEBP • Max 50MB each • Multiple files allowed</div>
                         </div>
 
                         <div class="file-list" id="jpgToPdfFileList"></div>
+
+                        <div class="action-buttons" id="jpgToPdfActions" style="display: none;">
+                            <button class="primary-btn" id="convertToPdfBtn">Convert to PDF</button>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('jpgToPdfUploadZone');
                     const fileInput = document.getElementById('jpgToPdfFileInput');
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('Files uploaded successfully! Full conversion functionality coming soon.');
-                        }
+                    fileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
                     });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        this.handleFiles(e.dataTransfer.files);
+                    });
+
+                    document.getElementById('convertToPdfBtn').addEventListener('click', () => this.convert());
+                },
+
+                handleFiles(fileList) {
+                    const validFiles = Array.from(fileList).filter(file => {
+                        if (!CONFIG.supportedFormats.images.includes(file.type)) {
+                            Utils.showError(`${file.name}: Invalid file type. Only JPG, PNG, WEBP allowed.`);
+                            return false;
+                        }
+                        if (file.size > CONFIG.maxFileSize) {
+                            Utils.showError(`${file.name}: File too large (max 50MB)`);
+                            return false;
+                        }
+                        return true;
+                    });
+
+                    if (validFiles.length === 0) return;
+
+                    this.files.push(...validFiles);
+                    this.renderFileList();
+                },
+
+                renderFileList() {
+                    const listEl = document.getElementById('jpgToPdfFileList');
+                    const convertBtn = document.getElementById('jpgToPdfActions');
+
+                    if (this.files.length === 0) {
+                        listEl.innerHTML = '';
+                        convertBtn.style.display = 'none';
+                        return;
+                    }
+
+                    convertBtn.style.display = 'flex';
+
+                    listEl.innerHTML = this.files.map((file, index) => `
+                        <div class="file-item" data-index="${index}">
+                            <div class="file-info">
+                                <div class="file-icon">🖼️</div>
+                                <div>
+                                    <div class="file-name">${file.name}</div>
+                                    <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+                                </div>
+                            </div>
+                            <button class="file-remove" onclick="Tools['jpg-to-pdf'].removeFile(${index})">Remove</button>
+                        </div>
+                    `).join('');
+                },
+
+                removeFile(index) {
+                    this.files.splice(index, 1);
+                    this.renderFileList();
+                },
+
+                async convert() {
+                    if (this.files.length === 0) {
+                        alert('Please upload at least one image');
+                        return;
+                    }
+
+                    try {
+                        UIManager.showLoading('Converting to PDF...');
+                        Utils.showProgress(0, 'Creating PDF document...');
+
+                        const { PDFDocument } = PDFLib;
+                        const pdfDoc = await PDFDocument.create();
+
+                        for (let i = 0; i < this.files.length; i++) {
+                            const progress = ((i + 1) / this.files.length) * 100;
+                            Utils.showProgress(progress, `Adding image ${i + 1} of ${this.files.length}...`);
+
+                            const arrayBuffer = await Utils.fileToArrayBuffer(this.files[i]);
+                            let image;
+
+                            if (this.files[i].type === 'image/png') {
+                                image = await pdfDoc.embedPng(arrayBuffer);
+                            } else if (this.files[i].type === 'image/jpeg' || this.files[i].type === 'image/jpg') {
+                                image = await pdfDoc.embedJpg(arrayBuffer);
+                            } else {
+                                // Convert other formats to PNG using canvas
+                                const dataUrl = await Utils.fileToDataURL(this.files[i]);
+                                const img = await new Promise((resolve, reject) => {
+                                    const imgEl = new Image();
+                                    imgEl.onload = () => resolve(imgEl);
+                                    imgEl.onerror = reject;
+                                    imgEl.src = dataUrl;
+                                });
+
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0);
+
+                                const pngBlob = await new Promise(resolve => {
+                                    canvas.toBlob(resolve, 'image/png');
+                                });
+
+                                const pngArrayBuffer = await pngBlob.arrayBuffer();
+                                image = await pdfDoc.embedPng(pngArrayBuffer);
+                            }
+
+                            // Create page with image dimensions
+                            const page = pdfDoc.addPage([image.width, image.height]);
+                            page.drawImage(image, {
+                                x: 0,
+                                y: 0,
+                                width: image.width,
+                                height: image.height
+                            });
+                        }
+
+                        Utils.showProgress(100, 'Saving PDF...');
+                        const pdfBytes = await pdfDoc.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">images-to-pdf.pdf</div>
+                                        <div class="result-stats">
+                                            ${this.files.length} image${this.files.length > 1 ? 's' : ''} converted • ${Utils.formatFileSize(blob.size)}
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools['jpg-to-pdf'].downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess(`Successfully converted ${this.files.length} image${this.files.length > 1 ? 's' : ''} to PDF!`);
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Conversion error:', error);
+                        Utils.showError('Failed to convert images to PDF. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob) {
+                        Utils.downloadFile(this.resultBlob, 'images-to-pdf.pdf');
+                    }
                 }
             },
 
             'pdf-to-jpg': {
+                currentFile: null,
+                pdfData: null,
+                convertedImages: [],
+
                 init() {
+                    this.currentFile = null;
+                    this.pdfData = null;
+                    this.convertedImages = [];
+
                     document.getElementById('workspaceTitle').textContent = 'PDF to JPG';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>Convert PDF pages to images:</strong> Each page will be exported as a separate JPG image.
+                            <strong>Convert PDF pages to images:</strong> Each page will be exported as a separate high-quality JPG image.
+                        </div>
+
+                        <div class="tool-settings">
+                            <div class="setting-group">
+                                <label class="setting-label">Image Quality</label>
+                                <input type="range" id="jpgQuality" min="50" max="100" value="92" class="setting-input">
+                                <span id="qualityValue" style="color: #666;">92%</span>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">Scale</label>
+                                <select id="jpgScale" class="setting-input" style="background: rgba(255,255,255,0.1); color: #333;">
+                                    <option value="1">1x (Standard)</option>
+                                    <option value="1.5">1.5x (High)</option>
+                                    <option value="2" selected>2x (Best)</option>
+                                    <option value="3">3x (Ultra)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="upload-zone" id="pdfToJpgUploadZone">
@@ -1593,26 +2089,195 @@
                         </div>
 
                         <div class="file-list" id="pdfToJpgFileList"></div>
+
+                        <div class="action-buttons" id="pdfToJpgActions" style="display: none;">
+                            <button class="primary-btn" id="convertToJpgBtn">Convert to JPG</button>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('pdfToJpgUploadZone');
                     const fileInput = document.getElementById('pdfToJpgFileInput');
+                    const qualitySlider = document.getElementById('jpgQuality');
+
+                    qualitySlider.addEventListener('input', (e) => {
+                        document.getElementById('qualityValue').textContent = e.target.value + '%';
+                    });
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full conversion functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('convertToJpgBtn').addEventListener('click', () => this.convert());
+                },
+
+                async handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+                    UIManager.showLoading('Loading PDF...');
+
+                    try {
+                        this.pdfData = await Utils.fileToArrayBuffer(file);
+                        const pdf = await pdfjsLib.getDocument({ data: this.pdfData }).promise;
+
+                        document.getElementById('pdfToJpgFileList').innerHTML = `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div>
+                                        <div class="file-name">${file.name}</div>
+                                        <div class="file-size">${Utils.formatFileSize(file.size)} • ${pdf.numPages} pages</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        document.getElementById('pdfToJpgActions').style.display = 'flex';
+                        UIManager.hideLoading();
+
+                    } catch (error) {
+                        console.error('Error loading PDF:', error);
+                        Utils.showError('Failed to load PDF. Please try again.');
+                        UIManager.hideLoading();
+                    }
+                },
+
+                async convert() {
+                    if (!this.pdfData) return;
+
+                    try {
+                        UIManager.showLoading('Converting to JPG...');
+                        Utils.showProgress(0, 'Loading PDF...');
+
+                        const pdf = await pdfjsLib.getDocument({ data: this.pdfData }).promise;
+                        const numPages = pdf.numPages;
+                        this.convertedImages = [];
+
+                        const quality = parseInt(document.getElementById('jpgQuality').value) / 100;
+                        const scale = parseFloat(document.getElementById('jpgScale').value);
+
+                        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                            const progress = (pageNum / numPages) * 100;
+                            Utils.showProgress(progress, `Converting page ${pageNum} of ${numPages}...`);
+
+                            const page = await pdf.getPage(pageNum);
+                            const viewport = page.getViewport({ scale });
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = viewport.width;
+                            canvas.height = viewport.height;
+
+                            const context = canvas.getContext('2d');
+                            await page.render({ canvasContext: context, viewport }).promise;
+
+                            const blob = await new Promise(resolve => {
+                                canvas.toBlob(resolve, 'image/jpeg', quality);
+                            });
+
+                            this.convertedImages.push({
+                                blob,
+                                pageNum,
+                                name: `page-${pageNum}.jpg`
+                            });
+                        }
+
+                        Utils.showProgress(100, 'Finalizing...');
+
+                        // Show results
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div style="margin-bottom: 20px;">
+                                <button class="success-btn" onclick="Tools['pdf-to-jpg'].downloadAll()" style="width: 100%;">
+                                    Download All Images (ZIP)
+                                </button>
+                            </div>
+                            ${this.convertedImages.map((img, index) => `
+                                <div class="result-item">
+                                    <div class="result-info">
+                                        <div class="result-details">
+                                            <div class="result-name">${img.name}</div>
+                                            <div class="result-stats">${Utils.formatFileSize(img.blob.size)}</div>
+                                        </div>
+                                        <button class="download-btn" onclick="Tools['pdf-to-jpg'].downloadSingle(${index})">Download</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        `;
+
+                        Utils.showSuccess(`Successfully converted ${numPages} page${numPages > 1 ? 's' : ''} to JPG!`);
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Conversion error:', error);
+                        Utils.showError('Failed to convert PDF to JPG. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadSingle(index) {
+                    const img = this.convertedImages[index];
+                    Utils.downloadFile(img.blob, img.name);
+                },
+
+                async downloadAll() {
+                    if (this.convertedImages.length === 0) return;
+
+                    try {
+                        UIManager.showLoading('Creating ZIP file...');
+
+                        const zip = new JSZip();
+                        this.convertedImages.forEach(img => {
+                            zip.file(img.name, img.blob);
+                        });
+
+                        const zipBlob = await zip.generateAsync({ type: 'blob' });
+                        Utils.downloadFile(zipBlob, 'pdf-pages.zip');
+
+                        UIManager.hideLoading();
+
+                    } catch (error) {
+                        console.error('ZIP error:', error);
+                        Utils.showError('Failed to create ZIP file.');
+                        UIManager.hideLoading();
+                    }
                 }
             },
 
             'rotate': {
+                currentFile: null,
+                pdfData: null,
+                totalPages: 0,
+                pageRotations: {},
+
                 init() {
+                    this.currentFile = null;
+                    this.pdfData = null;
+                    this.totalPages = 0;
+                    this.pageRotations = {};
+
                     document.getElementById('workspaceTitle').textContent = 'Rotate PDF';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>Rotate PDF pages:</strong> Rotate individual pages or all pages by 90°, 180°, or 270°.
+                            <strong>Rotate PDF pages:</strong> Click on page thumbnails to rotate them. Each click rotates 90° clockwise.
                         </div>
 
                         <div class="upload-zone" id="rotateUploadZone">
@@ -1623,17 +2288,199 @@
                         </div>
 
                         <div class="file-list" id="rotateFileList"></div>
+
+                        <div id="rotatePagesContainer" style="display: none;">
+                            <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button class="secondary-btn" style="padding: 10px 20px;" onclick="Tools.rotate.rotateAll(90)">Rotate All 90° ↻</button>
+                                <button class="secondary-btn" style="padding: 10px 20px;" onclick="Tools.rotate.rotateAll(180)">Rotate All 180° ↻↻</button>
+                                <button class="secondary-btn" style="padding: 10px 20px;" onclick="Tools.rotate.rotateAll(270)">Rotate All 270° ↺</button>
+                                <button class="secondary-btn" style="padding: 10px 20px;" onclick="Tools.rotate.resetRotations()">Reset All</button>
+                            </div>
+                            <div class="page-thumbnails" id="rotatePageThumbnails"></div>
+                            <div class="action-buttons">
+                                <button class="primary-btn" id="saveRotatedBtn">Save Rotated PDF</button>
+                            </div>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('rotateUploadZone');
                     const fileInput = document.getElementById('rotateFileInput');
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full rotate functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('saveRotatedBtn').addEventListener('click', () => this.saveRotated());
+                },
+
+                async handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+                    this.pageRotations = {};
+                    UIManager.showLoading('Loading PDF pages...');
+
+                    try {
+                        this.pdfData = await Utils.fileToArrayBuffer(file);
+                        const pdf = await pdfjsLib.getDocument({ data: this.pdfData }).promise;
+                        this.totalPages = pdf.numPages;
+
+                        document.getElementById('rotateFileList').innerHTML = `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div>
+                                        <div class="file-name">${file.name}</div>
+                                        <div class="file-size">${Utils.formatFileSize(file.size)} • ${this.totalPages} pages</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        await this.renderThumbnails();
+                        document.getElementById('rotatePagesContainer').style.display = 'block';
+                        UIManager.hideLoading();
+
+                    } catch (error) {
+                        console.error('Error loading PDF:', error);
+                        Utils.showError('Failed to load PDF. Please try again.');
+                        UIManager.hideLoading();
+                    }
+                },
+
+                async renderThumbnails() {
+                    const container = document.getElementById('rotatePageThumbnails');
+                    container.innerHTML = '';
+
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        const thumbnail = document.createElement('div');
+                        thumbnail.className = 'page-thumbnail';
+                        thumbnail.setAttribute('data-page', i);
+                        thumbnail.innerHTML = `
+                            <canvas></canvas>
+                            <div class="page-number">Page ${i} <span id="rotation-${i}"></span></div>
+                        `;
+
+                        thumbnail.addEventListener('click', () => this.rotatePage(i));
+                        container.appendChild(thumbnail);
+
+                        const canvas = thumbnail.querySelector('canvas');
+                        await Utils.renderPDFThumbnail(this.pdfData, i, canvas, 0.5);
+                    }
+                },
+
+                rotatePage(pageNum) {
+                    if (!this.pageRotations[pageNum]) {
+                        this.pageRotations[pageNum] = 0;
+                    }
+
+                    this.pageRotations[pageNum] = (this.pageRotations[pageNum] + 90) % 360;
+                    this.updatePageDisplay(pageNum);
+                },
+
+                updatePageDisplay(pageNum) {
+                    const rotation = this.pageRotations[pageNum] || 0;
+                    const thumbnail = document.querySelector(`[data-page="${pageNum}"]`);
+                    const canvas = thumbnail.querySelector('canvas');
+                    const rotationText = document.getElementById(`rotation-${pageNum}`);
+
+                    canvas.style.transform = `rotate(${rotation}deg)`;
+                    rotationText.textContent = rotation > 0 ? `(${rotation}°)` : '';
+                },
+
+                rotateAll(degrees) {
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        if (!this.pageRotations[i]) {
+                            this.pageRotations[i] = 0;
+                        }
+                        this.pageRotations[i] = (this.pageRotations[i] + degrees) % 360;
+                        this.updatePageDisplay(i);
+                    }
+                },
+
+                resetRotations() {
+                    this.pageRotations = {};
+                    for (let i = 1; i <= this.totalPages; i++) {
+                        this.updatePageDisplay(i);
+                    }
+                },
+
+                async saveRotated() {
+                    try {
+                        UIManager.showLoading('Rotating PDF...');
+                        Utils.showProgress(0, 'Loading PDF...');
+
+                        const { PDFDocument, degrees } = PDFLib;
+                        const pdfDoc = await PDFDocument.load(this.pdfData);
+                        const pages = pdfDoc.getPages();
+
+                        Utils.showProgress(50, 'Applying rotations...');
+
+                        pages.forEach((page, index) => {
+                            const pageNum = index + 1;
+                            const rotation = this.pageRotations[pageNum] || 0;
+
+                            if (rotation > 0) {
+                                const currentRotation = page.getRotation().angle;
+                                page.setRotation(degrees(currentRotation + rotation));
+                            }
+                        });
+
+                        Utils.showProgress(100, 'Saving PDF...');
+                        const pdfBytes = await pdfDoc.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                        const rotatedCount = Object.keys(this.pageRotations).filter(k => this.pageRotations[k] > 0).length;
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">rotated-${this.currentFile.name}</div>
+                                        <div class="result-stats">
+                                            ${rotatedCount} page${rotatedCount !== 1 ? 's' : ''} rotated • ${Utils.formatFileSize(blob.size)}
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools.rotate.downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess('PDF rotated successfully!');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Rotation error:', error);
+                        Utils.showError('Failed to rotate PDF. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob && this.currentFile) {
+                        Utils.downloadFile(this.resultBlob, `rotated-${this.currentFile.name}`);
+                    }
                 }
             },
 
@@ -1698,11 +2545,46 @@
             },
 
             'watermark': {
+                currentFile: null,
+
                 init() {
+                    this.currentFile = null;
+
                     document.getElementById('workspaceTitle').textContent = 'Add Watermark';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>Add text watermark:</strong> Customize position, opacity, size, and color of your watermark.
+                            <strong>Add text watermark:</strong> Customize the text, position, opacity, size, and rotation of your watermark.
+                        </div>
+
+                        <div class="tool-settings">
+                            <div class="setting-group">
+                                <label class="setting-label">Watermark Text</label>
+                                <input type="text" id="watermarkText" class="setting-input" placeholder="CONFIDENTIAL" value="CONFIDENTIAL">
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">Font Size</label>
+                                <input type="range" id="watermarkSize" min="20" max="100" value="48" class="setting-input">
+                                <span id="sizeValue" style="color: #666;">48px</span>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">Opacity</label>
+                                <input type="range" id="watermarkOpacity" min="10" max="100" value="30" class="setting-input">
+                                <span id="opacityValue" style="color: #666;">30%</span>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">Rotation</label>
+                                <input type="range" id="watermarkRotation" min="0" max="360" value="45" class="setting-input">
+                                <span id="rotationValue" style="color: #666;">45°</span>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">Position</label>
+                                <select id="watermarkPosition" class="setting-input" style="background: rgba(255,255,255,0.1); color: #333;">
+                                    <option value="center" selected>Center</option>
+                                    <option value="diagonal">Diagonal</option>
+                                    <option value="top">Top</option>
+                                    <option value="bottom">Bottom</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="upload-zone" id="watermarkUploadZone">
@@ -1713,17 +2595,171 @@
                         </div>
 
                         <div class="file-list" id="watermarkFileList"></div>
+
+                        <div class="action-buttons" id="watermarkActions" style="display: none;">
+                            <button class="primary-btn" id="addWatermarkBtn">Add Watermark</button>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('watermarkUploadZone');
                     const fileInput = document.getElementById('watermarkFileInput');
 
+                    // Update value displays
+                    document.getElementById('watermarkSize').addEventListener('input', (e) => {
+                        document.getElementById('sizeValue').textContent = e.target.value + 'px';
+                    });
+                    document.getElementById('watermarkOpacity').addEventListener('input', (e) => {
+                        document.getElementById('opacityValue').textContent = e.target.value + '%';
+                    });
+                    document.getElementById('watermarkRotation').addEventListener('input', (e) => {
+                        document.getElementById('rotationValue').textContent = e.target.value + '°';
+                    });
+
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full watermark functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('addWatermarkBtn').addEventListener('click', () => this.addWatermark());
+                },
+
+                handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+
+                    document.getElementById('watermarkFileList').innerHTML = `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-icon">📄</div>
+                                <div>
+                                    <div class="file-name">${file.name}</div>
+                                    <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('watermarkActions').style.display = 'flex';
+                },
+
+                async addWatermark() {
+                    if (!this.currentFile) return;
+
+                    const watermarkText = document.getElementById('watermarkText').value;
+                    if (!watermarkText.trim()) {
+                        alert('Please enter watermark text');
+                        return;
+                    }
+
+                    try {
+                        UIManager.showLoading('Adding watermark...');
+                        Utils.showProgress(0, 'Loading PDF...');
+
+                        const arrayBuffer = await Utils.fileToArrayBuffer(this.currentFile);
+                        const { PDFDocument, rgb, degrees } = PDFLib;
+                        const pdfDoc = await PDFDocument.load(arrayBuffer);
+                        const pages = pdfDoc.getPages();
+
+                        const fontSize = parseInt(document.getElementById('watermarkSize').value);
+                        const opacity = parseInt(document.getElementById('watermarkOpacity').value) / 100;
+                        const rotation = parseInt(document.getElementById('watermarkRotation').value);
+                        const position = document.getElementById('watermarkPosition').value;
+
+                        Utils.showProgress(30, 'Adding watermark to pages...');
+
+                        for (let i = 0; i < pages.length; i++) {
+                            const progress = 30 + ((i + 1) / pages.length) * 60;
+                            Utils.showProgress(progress, `Watermarking page ${i + 1} of ${pages.length}...`);
+
+                            const page = pages[i];
+                            const { width, height } = page.getSize();
+
+                            let x, y;
+                            switch (position) {
+                                case 'center':
+                                    x = width / 2;
+                                    y = height / 2;
+                                    break;
+                                case 'diagonal':
+                                    x = width / 2;
+                                    y = height / 2;
+                                    break;
+                                case 'top':
+                                    x = width / 2;
+                                    y = height - 50;
+                                    break;
+                                case 'bottom':
+                                    x = width / 2;
+                                    y = 50;
+                                    break;
+                                default:
+                                    x = width / 2;
+                                    y = height / 2;
+                            }
+
+                            page.drawText(watermarkText, {
+                                x: x,
+                                y: y,
+                                size: fontSize,
+                                rotate: degrees(rotation),
+                                color: rgb(0.5, 0.5, 0.5),
+                                opacity: opacity
+                            });
+                        }
+
+                        Utils.showProgress(100, 'Saving PDF...');
+                        const pdfBytes = await pdfDoc.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">watermarked-${this.currentFile.name}</div>
+                                        <div class="result-stats">
+                                            Watermark added to ${pages.length} page${pages.length > 1 ? 's' : ''} • ${Utils.formatFileSize(blob.size)}
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools.watermark.downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess('Watermark added successfully!');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Watermark error:', error);
+                        Utils.showError('Failed to add watermark. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob && this.currentFile) {
+                        Utils.downloadFile(this.resultBlob, `watermarked-${this.currentFile.name}`);
+                    }
                 }
             },
 
@@ -1818,11 +2854,19 @@
             },
 
             'organize': {
+                currentFile: null,
+                pdfData: null,
+                pageOrder: [],
+
                 init() {
+                    this.currentFile = null;
+                    this.pdfData = null;
+                    this.pageOrder = [];
+
                     document.getElementById('workspaceTitle').textContent = 'Organize Pages';
                     document.getElementById('toolContent').innerHTML = `
                         <div class="info-box info">
-                            <strong>Reorganize pages:</strong> Drag and drop to reorder, delete unwanted pages, or duplicate pages.
+                            <strong>Reorganize pages:</strong> Drag pages to reorder them. Click Delete to remove a page, or Duplicate to add a copy.
                         </div>
 
                         <div class="upload-zone" id="organizeUploadZone">
@@ -1833,17 +2877,245 @@
                         </div>
 
                         <div class="file-list" id="organizeFileList"></div>
+
+                        <div id="organizePagesContainer" style="display: none;">
+                            <div style="margin: 20px 0;">
+                                <span id="pageCount" style="color: #666; font-weight: 600;"></span>
+                            </div>
+                            <div class="page-thumbnails" id="organizePageThumbnails"></div>
+                            <div class="action-buttons">
+                                <button class="primary-btn" id="saveOrganizedBtn">Save Organized PDF</button>
+                            </div>
+                        </div>
                     `;
 
                     const uploadZone = document.getElementById('organizeUploadZone');
                     const fileInput = document.getElementById('organizeFileInput');
 
                     uploadZone.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            Utils.showSuccess('File uploaded successfully! Full organize functionality coming soon.');
+                    fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+
+                    uploadZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.add('dragover');
+                    });
+
+                    uploadZone.addEventListener('dragleave', () => {
+                        uploadZone.classList.remove('dragover');
+                    });
+
+                    uploadZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadZone.classList.remove('dragover');
+                        if (e.dataTransfer.files.length > 0) {
+                            this.handleFile(e.dataTransfer.files[0]);
                         }
                     });
+
+                    document.getElementById('saveOrganizedBtn').addEventListener('click', () => this.saveOrganized());
+                },
+
+                async handleFile(file) {
+                    if (!file || !Utils.validateFile(file, 'pdf')) return;
+
+                    this.currentFile = file;
+                    UIManager.showLoading('Loading PDF pages...');
+
+                    try {
+                        this.pdfData = await Utils.fileToArrayBuffer(file);
+                        const pdf = await pdfjsLib.getDocument({ data: this.pdfData }).promise;
+                        const totalPages = pdf.numPages;
+
+                        this.pageOrder = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+                        document.getElementById('organizeFileList').innerHTML = `
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <div class="file-icon">📄</div>
+                                    <div>
+                                        <div class="file-name">${file.name}</div>
+                                        <div class="file-size">${Utils.formatFileSize(file.size)} • ${totalPages} pages</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        await this.renderPages();
+                        document.getElementById('organizePagesContainer').style.display = 'block';
+                        UIManager.hideLoading();
+
+                    } catch (error) {
+                        console.error('Error loading PDF:', error);
+                        Utils.showError('Failed to load PDF. Please try again.');
+                        UIManager.hideLoading();
+                    }
+                },
+
+                async renderPages() {
+                    const container = document.getElementById('organizePageThumbnails');
+                    container.innerHTML = '';
+
+                    for (let i = 0; i < this.pageOrder.length; i++) {
+                        const pageNum = this.pageOrder[i];
+                        const thumbnail = document.createElement('div');
+                        thumbnail.className = 'page-thumbnail';
+                        thumbnail.setAttribute('draggable', 'true');
+                        thumbnail.setAttribute('data-index', i);
+                        thumbnail.innerHTML = `
+                            <canvas></canvas>
+                            <div class="page-number">Page ${pageNum}</div>
+                            <div style="display: flex; gap: 5px; margin-top: 8px;">
+                                <button onclick="Tools.organize.duplicatePage(${i})" style="flex: 1; padding: 4px 8px; font-size: 0.8em; background: #43e97b; color: white; border: none; border-radius: 4px; cursor: pointer;">Duplicate</button>
+                                <button onclick="Tools.organize.deletePage(${i})" style="flex: 1; padding: 4px 8px; font-size: 0.8em; background: #ff4757; color: white; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                            </div>
+                        `;
+
+                        this.setupDragAndDrop(thumbnail);
+                        container.appendChild(thumbnail);
+
+                        const canvas = thumbnail.querySelector('canvas');
+                        await Utils.renderPDFThumbnail(this.pdfData, pageNum, canvas, 0.5);
+                    }
+
+                    this.updatePageCount();
+                },
+
+                setupDragAndDrop(element) {
+                    element.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/html', e.target.innerHTML);
+                        element.classList.add('dragging');
+                    });
+
+                    element.addEventListener('dragend', () => {
+                        element.classList.remove('dragging');
+                    });
+
+                    element.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+
+                        const afterElement = this.getDragAfterElement(e.clientY);
+                        const dragging = document.querySelector('.dragging');
+                        const container = document.getElementById('organizePageThumbnails');
+
+                        if (afterElement == null) {
+                            container.appendChild(dragging);
+                        } else {
+                            container.insertBefore(dragging, afterElement);
+                        }
+                    });
+
+                    element.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        this.updatePageOrderFromDOM();
+                    });
+                },
+
+                getDragAfterElement(y) {
+                    const draggableElements = [...document.querySelectorAll('.page-thumbnail:not(.dragging)')];
+
+                    return draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    }, { offset: Number.NEGATIVE_INFINITY }).element;
+                },
+
+                updatePageOrderFromDOM() {
+                    const thumbnails = document.querySelectorAll('.page-thumbnail');
+                    const newOrder = [];
+
+                    thumbnails.forEach((thumb, index) => {
+                        const pageText = thumb.querySelector('.page-number').textContent;
+                        const pageNum = parseInt(pageText.replace('Page ', ''));
+                        newOrder.push(pageNum);
+                        thumb.setAttribute('data-index', index);
+                    });
+
+                    this.pageOrder = newOrder;
+                    this.updatePageCount();
+                },
+
+                duplicatePage(index) {
+                    const pageNum = this.pageOrder[index];
+                    this.pageOrder.splice(index + 1, 0, pageNum);
+                    this.renderPages();
+                },
+
+                deletePage(index) {
+                    if (this.pageOrder.length === 1) {
+                        alert('Cannot delete the last page');
+                        return;
+                    }
+                    this.pageOrder.splice(index, 1);
+                    this.renderPages();
+                },
+
+                updatePageCount() {
+                    document.getElementById('pageCount').textContent =
+                        `${this.pageOrder.length} page${this.pageOrder.length > 1 ? 's' : ''} in document`;
+                },
+
+                async saveOrganized() {
+                    try {
+                        UIManager.showLoading('Organizing PDF...');
+                        Utils.showProgress(0, 'Loading PDF...');
+
+                        const { PDFDocument } = PDFLib;
+                        const sourcePdf = await PDFDocument.load(this.pdfData);
+                        const newPdf = await PDFDocument.create();
+
+                        for (let i = 0; i < this.pageOrder.length; i++) {
+                            const progress = ((i + 1) / this.pageOrder.length) * 100;
+                            Utils.showProgress(progress, `Organizing page ${i + 1} of ${this.pageOrder.length}...`);
+
+                            const [copiedPage] = await newPdf.copyPages(sourcePdf, [this.pageOrder[i] - 1]);
+                            newPdf.addPage(copiedPage);
+                        }
+
+                        Utils.showProgress(100, 'Saving PDF...');
+                        const pdfBytes = await newPdf.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+                        const resultsSection = document.getElementById('resultsSection');
+                        resultsSection.style.display = 'block';
+                        resultsSection.innerHTML = `
+                            <div class="result-item">
+                                <div class="result-info">
+                                    <div class="result-details">
+                                        <div class="result-name">organized-${this.currentFile.name}</div>
+                                        <div class="result-stats">
+                                            ${this.pageOrder.length} page${this.pageOrder.length > 1 ? 's' : ''} organized • ${Utils.formatFileSize(blob.size)}
+                                        </div>
+                                    </div>
+                                    <button class="download-btn" onclick="Tools.organize.downloadResult()">Download PDF</button>
+                                </div>
+                            </div>
+                        `;
+
+                        this.resultBlob = blob;
+                        Utils.showSuccess('PDF organized successfully!');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+
+                    } catch (error) {
+                        console.error('Organize error:', error);
+                        Utils.showError('Failed to organize PDF. Please try again.');
+                        UIManager.hideLoading();
+                        Utils.hideProgress();
+                    }
+                },
+
+                downloadResult() {
+                    if (this.resultBlob && this.currentFile) {
+                        Utils.downloadFile(this.resultBlob, `organized-${this.currentFile.name}`);
+                    }
                 }
             },
 

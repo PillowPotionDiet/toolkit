@@ -11,8 +11,8 @@
       border: 2px solid var(--border-color);
       border-radius: var(--radius-md);
       padding: 1.25rem;
-      margin-bottom: 1rem;
       transition: all 0.2s ease;
+      cursor: pointer;
     }
     .site-card:hover {
       border-color: var(--primary-color);
@@ -171,13 +171,10 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       .sites-grid {
         grid-template-columns: 1fr;
       }
-    }
-    .site-card {
-      margin-bottom: 0;
     }
   </style>
 </head>

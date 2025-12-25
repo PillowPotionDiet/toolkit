@@ -241,33 +241,66 @@ async function handleListSites(request, env, origin) {
     const allSites = [];
     const debug = {
       websitesStatus: null,
+      websitesPages: 0,
       domainsStatus: null,
       subscriptionsStatus: null,
       ordersStatus: null
     };
 
-    // 1. Fetch websites from hosting API
-    const websitesResponse = await fetch(
-      `${HOSTINGER_API_BASE}/api/hosting/v1/websites`,
-      {
-        headers: {
-          'Authorization': `Bearer ${apiToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    debug.websitesStatus = websitesResponse.status;
-
+    // 1. Fetch ALL websites from hosting API using pagination (GET request)
+    // The API returns paginated results, so we need to fetch all pages
     let websites = [];
-    if (websitesResponse.ok) {
-      const websitesData = await websitesResponse.json();
-      websites = Array.isArray(websitesData) ? websitesData : (websitesData.data || websitesData.websites || []);
+    let page = 1;
+    let hasMorePages = true;
+
+    while (hasMorePages) {
+      const websitesResponse = await fetch(
+        `${HOSTINGER_API_BASE}/api/hosting/v1/websites?page=${page}&per_page=100`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      debug.websitesStatus = websitesResponse.status;
+
+      if (websitesResponse.ok) {
+        const websitesData = await websitesResponse.json();
+
+        // Handle different response formats
+        let pageWebsites = [];
+        if (Array.isArray(websitesData)) {
+          pageWebsites = websitesData;
+        } else if (websitesData.data && Array.isArray(websitesData.data)) {
+          pageWebsites = websitesData.data;
+        } else if (websitesData.websites && Array.isArray(websitesData.websites)) {
+          pageWebsites = websitesData.websites;
+        }
+
+        websites = websites.concat(pageWebsites);
+        debug.websitesPages = page;
+
+        // Check if there are more pages
+        // Most APIs return empty array or have a pagination object
+        if (pageWebsites.length < 100) {
+          hasMorePages = false;
+        } else {
+          page++;
+          // Safety limit to prevent infinite loops
+          if (page > 10) hasMorePages = false;
+        }
+      } else {
+        hasMorePages = false;
+      }
     }
 
-    // 2. Fetch domains portfolio
+    // 2. Fetch domains portfolio (GET request)
     const domainsResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/domains/v1/portfolio`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiToken}`,
           'Content-Type': 'application/json'
@@ -286,6 +319,7 @@ async function handleListSites(request, env, origin) {
     const subscriptionsResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiToken}`,
           'Content-Type': 'application/json'
@@ -300,10 +334,11 @@ async function handleListSites(request, env, origin) {
       subscriptions = Array.isArray(subsData) ? subsData : (subsData.data || subsData.subscriptions || []);
     }
 
-    // 4. Fetch orders to get more site info
+    // 4. Fetch orders to get more site info (GET request)
     const ordersResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/hosting/v1/orders`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiToken}`,
           'Content-Type': 'application/json'
@@ -574,6 +609,7 @@ async function handleDiscoverSites(request, env, origin) {
     const vhostsResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/hosting/v1/virtual-hosts`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiToken}`,
           'Content-Type': 'application/json'
@@ -606,6 +642,7 @@ async function handleDiscoverSites(request, env, origin) {
     const subscriptionsResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${apiToken}`,
           'Content-Type': 'application/json'

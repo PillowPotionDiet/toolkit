@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nSeparate image and video compression tools with context-aware UI\n\n- Create dedicated video compressor page (video-compressor/index.html)\n  - Standalone video compression with MP4, WebM, AVI, MKV support\n  - FFmpeg integration with real-time progress tracking\n  - Percentage-based and target size compression options\n\n- Update image compressor page (compressor/index.html)\n  - Remove video mode switcher and video functionality\n  - Focus exclusively on image compression and conversion\n  - Add context-aware guidance banners based on URL parameters\n  - Update SEO metadata and structured data for images only\n\n- Update main toolkit page (index.html)\n  - AI Image Converter button links to compressor/?mode=convert\n  - AI Image Compressor button links to compressor/?mode=compress\n  - AI Video Compressor button links to video-compressor/\n  - Update footer links to match new structure\n  - Update copyright year to 2025\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(find:*)",
+      "Bash(findstr:*)",
+      "Bash(dir /s \"e:\\Auto Live Projects\\toolkit\")",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd animated hero section background to all tool pages\n\n- Add particle canvas animation with floating colored particles\n- Add gradient overlay with breathing animation effect\n- Add 4 floating shapes with staggered blur animations\n- Purple, pink, blue, and green gradient color palette\n- Apply to bg-remover, compressor, video-compressor, pdf-editor pages\n- Create comprehensive hero-section-styles.md documentation\n- Includes complete CSS animations and JavaScript particle system\n- Responsive design with proper z-index layering\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nEnhance animated background shapes for better visibility\n\n- Increase shape sizes: 300-400px → 400-500px\n- Boost opacity: 0.5 → 0.7 for more vibrant appearance\n- Reduce blur: 80px → 60px for sharper, more defined shapes\n- Brighten colors: lighter, more saturated gradients\n  - Purple: #667eea/#764ba2 → #8b9ff5/#9d6cc0\n  - Pink: #f093fb/#f5576c → #ffb3fc/#ff7a8f\n  - Blue: #4facfe/#00f2fe → #6fbfff/#33f5ff\n  - Green: #43e97b/#38f9d7 → #60ff9f/#55ffe3\n- Applied to all tool pages for consistent visual impact\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(wc:*)",
+      "Bash(copy publicindex.html index.html)",
+      "Bash(copy:*)",
+      "Bash(cp:*)",
+      "Bash(wrangler --version:*)",
+      "Bash(npm install:*)",
+      "Bash(wrangler login:*)",
+      "Bash(wrangler deploy:*)"
+    ]
+  }
+}
