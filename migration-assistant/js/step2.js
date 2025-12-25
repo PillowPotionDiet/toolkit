@@ -480,7 +480,7 @@ async function downloadSites(type) {
 }
 
 /**
- * Go to next step
+ * Go to next step - shows FTP modal first
  */
 function goToNextStep() {
   if (selectedSites.size === 0) {
@@ -491,10 +491,85 @@ function goToNextStep() {
   // Save selected sites to localStorage
   Utils.setStorage('migration_selected_sites', Array.from(selectedSites));
 
-  Utils.showAlert(`
-    <strong>Demo Mode</strong><br><br>
-    ${selectedSites.size} site(s) selected for migration.<br><br>
-    Step 3 (Connect New Account) is coming in Phase 3.<br>
-    This demo ends here for now.
-  `, 'info');
+  // Show FTP credentials modal
+  showFtpModal();
+}
+
+/**
+ * Show FTP credentials modal
+ */
+function showFtpModal() {
+  const modal = document.getElementById('ftpModal');
+  modal.classList.remove('hidden');
+
+  // Focus first input
+  document.getElementById('ftpHost').focus();
+
+  // Setup form submit handler
+  const ftpForm = document.getElementById('ftpForm');
+  ftpForm.onsubmit = handleFtpSubmit;
+}
+
+/**
+ * Close FTP modal
+ */
+function closeFtpModal() {
+  document.getElementById('ftpModal').classList.add('hidden');
+}
+
+/**
+ * Handle FTP form submission
+ */
+async function handleFtpSubmit(e) {
+  e.preventDefault();
+
+  const ftpHost = document.getElementById('ftpHost').value.trim();
+  const ftpUsername = document.getElementById('ftpUsername').value.trim();
+  const ftpPassword = document.getElementById('ftpPassword').value;
+
+  if (!ftpHost || !ftpUsername || !ftpPassword) {
+    Utils.showAlert('Please fill in all FTP credentials.', 'warning');
+    return;
+  }
+
+  const submitBtn = document.getElementById('ftpSubmitBtn');
+  const btnText = document.getElementById('ftpBtnText');
+  const btnIcon = document.getElementById('ftpBtnIcon');
+
+  const originalText = btnText.textContent;
+  const originalIcon = btnIcon.textContent;
+
+  try {
+    submitBtn.disabled = true;
+    btnText.textContent = 'Verifying...';
+    btnIcon.innerHTML = '<div class="loading" style="width: 16px; height: 16px;"></div>';
+
+    // Save FTP credentials to localStorage
+    const provider = Utils.getStorage('migration_provider') || {};
+    provider.ftp = {
+      host: ftpHost,
+      username: ftpUsername,
+      password: ftpPassword
+    };
+    Utils.setStorage('migration_provider', provider);
+
+    // Simulate FTP connection test (in real implementation, this would call the worker)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    closeFtpModal();
+
+    Utils.showAlert(`
+      <strong>✅ FTP Credentials Saved!</strong><br><br>
+      ${selectedSites.size} site(s) selected for migration.<br><br>
+      <strong>Next:</strong> Step 3 (Connect New Account) is coming in Phase 3.<br>
+      FTP credentials will be used to download files during migration.
+    `, 'success');
+
+  } catch (error) {
+    Utils.showAlert(`<strong>Error:</strong> ${error.message}`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    btnText.textContent = originalText;
+    btnIcon.textContent = originalIcon;
+  }
 }

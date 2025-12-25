@@ -16,14 +16,14 @@ const PROVIDERS = {
     name: 'Hostinger',
     type: 'api',
     enabled: true,
-    notes: 'Connect using your Hostinger API token from Account Settings.',
+    notes: 'Connect using your Hostinger API token to list your sites.',
     features: ['API Access', 'Websites', 'Databases', 'Emails'],
     credentialFields: [
       {
         name: 'apiToken',
         label: 'Hostinger API Token',
         type: 'password',
-        placeholder: 'Paste your API token from Hostinger dashboard',
+        placeholder: 'Paste your API token from Account Settings → API',
         required: true
       }
     ],
