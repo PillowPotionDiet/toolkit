@@ -405,17 +405,12 @@ function createSiteCard(site, index) {
         <input type="checkbox" class="site-checkbox" data-site-id="${site.id}" ${isSelected ? 'checked' : ''}>
         <div class="site-info">
           <div class="site-domain">
-            ${site.domain}
+            <span class="site-domain-name">${site.domain}</span>
             ${cmsBadge}
             ${site.hasGit ? '<span class="git-badge">Git</span>' : ''}
           </div>
           <div class="site-path">${site.path}</div>
         </div>
-      </div>
-      <div class="site-actions">
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); previewSite('${site.domain}')">
-          🌐 Preview
-        </button>
       </div>
     </div>
   `;
