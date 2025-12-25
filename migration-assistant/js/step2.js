@@ -1,7 +1,14 @@
 /**
  * Step 2 - Site Selection
  * Lists sites from connected hosting, detects CMS, allows selection
+ * Supports both demo mode and real Hostinger API
  */
+
+// API Configuration (should match step1.js)
+const API_CONFIG = {
+  workerUrl: '', // Set to your Cloudflare Worker URL
+  demoMode: true
+};
 
 // Mock site data for demo
 const MOCK_SITES = [
@@ -156,13 +163,53 @@ function setupEventListeners() {
 }
 
 /**
- * Load sites (simulated)
+ * Load sites from API or demo data
  */
 async function loadSites() {
-  // Simulate loading delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  const provider = Utils.getStorage('migration_provider');
 
-  sites = MOCK_SITES;
+  if (API_CONFIG.workerUrl && !API_CONFIG.demoMode && provider?.apiToken) {
+    // Real API mode
+    try {
+      const response = await fetch(`${API_CONFIG.workerUrl}/api/list-sites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiToken: provider.apiToken })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.sites) {
+        sites = data.sites.map((site, index) => ({
+          id: index + 1,
+          domain: site.domain || site.name,
+          path: site.path || `/home/user/${site.domain}`,
+          cms: site.cms || 'unknown',
+          cmsVersion: site.cmsVersion || null,
+          hasGit: site.hasGit || false,
+          stats: {
+            files: site.stats?.files || 0,
+            size: site.stats?.size || 0,
+            databases: site.stats?.databases || 0,
+            dbSize: site.stats?.dbSize || 0,
+            emails: site.stats?.emails || 0
+          },
+          lastModified: site.lastModified || new Date().toISOString().split('T')[0]
+        }));
+      } else {
+        Utils.showAlert(`Failed to load sites: ${data.error || 'Unknown error'}`, 'error');
+        sites = MOCK_SITES; // Fallback to demo
+      }
+    } catch (error) {
+      Utils.showAlert(`API Error: ${error.message}. Showing demo data.`, 'warning');
+      sites = MOCK_SITES;
+    }
+  } else {
+    // Demo mode - simulate loading delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    sites = MOCK_SITES;
+  }
+
   renderSites(sites);
   document.getElementById('selectionBar').style.display = 'flex';
 }

@@ -1,0 +1,20 @@
+# Cloudflare Worker Configuration
+# Migration Assistant API Proxy
+
+name = "migration-assistant-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Environment variables (set these in Cloudflare dashboard for production)
+# [vars]
+# ALLOWED_ORIGIN = "https://toolkit.pillowpotion.com"
+
+# For local development
+[dev]
+port = 8787
+
+# Production environment
+[env.production]
+name = "migration-assistant-api"
+# Set HOSTINGER_API_TOKEN as a secret:
+# wrangler secret put HOSTINGER_API_TOKEN --env production

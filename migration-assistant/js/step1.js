@@ -1,42 +1,35 @@
 /**
  * Step 1 - Old Account Connection
- * Static version with embedded provider data
- * Only Hostinger is currently functional
+ * Supports both demo mode and real Hostinger API via Cloudflare Worker
  */
+
+// API Configuration
+const API_CONFIG = {
+  // Set to your Cloudflare Worker URL when deployed
+  // Leave empty for demo mode
+  workerUrl: '', // e.g., 'https://migration-assistant-api.your-account.workers.dev'
+  demoMode: true // Set to false when worker is deployed
+};
 
 // Embedded provider configuration
 const PROVIDERS = {
   hostinger: {
     id: 'hostinger',
     name: 'Hostinger',
-    type: 'cpanel',
+    type: 'api',
     enabled: true,
-    notes: 'Hostinger uses hPanel which provides cPanel-compatible API access.',
-    features: ['cPanel API', 'File Manager', 'MySQL', 'Email'],
+    notes: 'Connect using your Hostinger API token from Account Settings.',
+    features: ['API Access', 'Websites', 'Databases', 'Emails'],
     credentialFields: [
       {
-        name: 'hostname',
-        label: 'cPanel/hPanel URL',
-        type: 'url',
-        placeholder: 'https://your-server.hostinger.com:2083',
-        required: true
-      },
-      {
-        name: 'username',
-        label: 'cPanel Username',
-        type: 'text',
-        placeholder: 'Your cPanel username',
-        required: true
-      },
-      {
         name: 'apiToken',
-        label: 'API Token',
+        label: 'Hostinger API Token',
         type: 'password',
-        placeholder: 'Your cPanel API token',
+        placeholder: 'Paste your API token from Hostinger dashboard',
         required: true
       }
     ],
-    helpUrl: 'https://support.hostinger.com/en/articles/1583249-how-to-create-an-api-token-on-hpanel'
+    helpUrl: 'https://support.hostinger.com/en/articles/6307182-how-to-create-an-api-token'
   },
   // Coming Soon Providers
   bluehost: { id: 'bluehost', name: 'Bluehost', enabled: false },
@@ -65,7 +58,24 @@ let selectedProvider = null;
 document.addEventListener('DOMContentLoaded', () => {
   updateProviderDropdown();
   setupEventListeners();
+  checkApiMode();
 });
+
+/**
+ * Check if API mode is available
+ */
+function checkApiMode() {
+  if (API_CONFIG.workerUrl && !API_CONFIG.demoMode) {
+    console.log('API Mode: Real Hostinger API via Worker');
+  } else {
+    console.log('API Mode: Demo Mode (no backend)');
+    // Show demo mode notice
+    Utils.showAlert(`
+      <strong>Demo Mode Active</strong><br>
+      This is a demonstration. To use real Hostinger API, deploy the Cloudflare Worker.
+    `, 'info');
+  }
+}
 
 /**
  * Update provider dropdown with Coming Soon labels
@@ -74,52 +84,42 @@ function updateProviderDropdown() {
   const select = document.getElementById('providerSelect');
   if (!select) return;
 
-  // Clear existing options except the first one
+  // Clear existing options
   select.innerHTML = '<option value="">-- Choose Provider --</option>';
 
   // Add cPanel providers group
   const cpanelGroup = document.createElement('optgroup');
-  cpanelGroup.label = 'Popular cPanel Hosts';
+  cpanelGroup.label = 'Supported Providers';
 
-  const cpanelProviders = ['hostinger', 'bluehost', 'siteground', 'godaddy-cpanel', 'hostgator',
-    'namecheap-cpanel', 'a2hosting', 'inmotion', 'dreamhost', 'ipage', 'greengeeks',
-    'hostwinds', 'interserver', 'cpanel-generic'];
-
-  cpanelProviders.forEach(id => {
-    const provider = PROVIDERS[id];
-    const option = document.createElement('option');
-    option.value = id;
-
-    if (provider.enabled) {
-      option.textContent = provider.name;
-    } else {
-      option.textContent = `${provider.name} (Coming Soon)`;
-      option.disabled = true;
-      option.style.color = '#999';
-    }
-
-    cpanelGroup.appendChild(option);
-  });
+  // Add Hostinger first (enabled)
+  const hostingerOption = document.createElement('option');
+  hostingerOption.value = 'hostinger';
+  hostingerOption.textContent = 'Hostinger';
+  cpanelGroup.appendChild(hostingerOption);
 
   select.appendChild(cpanelGroup);
 
-  // Add other control panels group
-  const otherGroup = document.createElement('optgroup');
-  otherGroup.label = 'Other Control Panels';
+  // Add coming soon providers
+  const comingSoonGroup = document.createElement('optgroup');
+  comingSoonGroup.label = 'Coming Soon';
 
-  const otherProviders = ['plesk', 'directadmin', 'cloudways', 'godaddy-plesk', 'namecheap-directadmin'];
+  const comingSoonProviders = ['bluehost', 'siteground', 'godaddy-cpanel', 'hostgator',
+    'namecheap-cpanel', 'a2hosting', 'inmotion', 'dreamhost', 'ipage', 'greengeeks',
+    'hostwinds', 'interserver', 'cpanel-generic', 'plesk', 'directadmin', 'cloudways'];
 
-  otherProviders.forEach(id => {
+  comingSoonProviders.forEach(id => {
     const provider = PROVIDERS[id];
-    const option = document.createElement('option');
-    option.value = id;
-    option.textContent = `${provider.name} (Coming Soon)`;
-    option.disabled = true;
-    option.style.color = '#999';
-    otherGroup.appendChild(option);
+    if (provider) {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = `${provider.name} (Coming Soon)`;
+      option.disabled = true;
+      option.style.color = '#999';
+      comingSoonGroup.appendChild(option);
+    }
   });
 
-  select.appendChild(otherGroup);
+  select.appendChild(comingSoonGroup);
 }
 
 /**
@@ -130,7 +130,6 @@ function setupEventListeners() {
   const credentialsForm = document.getElementById('credentialsForm');
   const testConnectionBtn = document.getElementById('testConnectionBtn');
 
-  // Provider selection change
   providerSelect.addEventListener('change', (e) => {
     const providerId = e.target.value;
     if (providerId) {
@@ -140,18 +139,15 @@ function setupEventListeners() {
     }
   });
 
-  // Test connection button
   testConnectionBtn.addEventListener('click', async () => {
     await testConnection();
   });
 
-  // Form submit (Connect & Scan)
   credentialsForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     await connectToProvider();
   });
 
-  // Real-time validation on credential fields
   credentialsForm.addEventListener('input', () => {
     validateCredentials();
   });
@@ -171,24 +167,17 @@ function selectProvider(providerId) {
   if (!provider.enabled) {
     Utils.showAlert(`
       <strong>Coming Soon</strong><br>
-      ${provider.name} support is coming in a future update. Currently only <strong>Hostinger</strong> is fully supported.
+      ${provider.name} support is coming in a future update. Currently only <strong>Hostinger</strong> is supported.
     `, 'warning');
+    document.getElementById('providerSelect').value = '';
     return;
   }
 
   selectedProvider = provider;
-
-  // Show provider info
   displayProviderInfo(provider);
-
-  // Build credential form
   buildCredentialForm(provider);
-
-  // Show form
   Utils.toggleElement('credentialsForm', true);
   Utils.toggleElement('notImplementedWarning', false);
-
-  // Clear previous alerts
   Utils.clearAlerts();
 }
 
@@ -212,27 +201,17 @@ function displayProviderInfo(provider) {
   const providerNotes = document.getElementById('providerNotes');
   const providerFeatures = document.getElementById('providerFeatures');
 
-  // Show provider info card
   Utils.toggleElement('providerInfo', true);
-
-  // Set provider name
   providerName.textContent = provider.name;
 
-  // Set provider logo
-  const logoColors = {
-    hostinger: '#673DE6'
-  };
-
   providerLogo.innerHTML = `
-    <div style="width: 60px; height: 60px; background: ${logoColors[provider.id] || 'var(--bg-tertiary)'}; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; font-weight: bold;">
-      ${provider.name.charAt(0)}
+    <div style="width: 60px; height: 60px; background: #673DE6; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; font-weight: bold;">
+      H
     </div>
   `;
 
-  // Set provider notes
-  providerNotes.textContent = provider.notes || 'No additional notes.';
+  providerNotes.textContent = provider.notes || '';
 
-  // Set provider features
   providerFeatures.innerHTML = '';
   if (provider.features && provider.features.length > 0) {
     provider.features.forEach(feature => {
@@ -245,17 +224,15 @@ function displayProviderInfo(provider) {
 }
 
 /**
- * Build credential form dynamically
+ * Build credential form
  */
 function buildCredentialForm(provider) {
   const credentialFields = document.getElementById('credentialFields');
   const helpSection = document.getElementById('helpSection');
   const helpLink = document.getElementById('helpLink');
 
-  // Clear existing fields
   credentialFields.innerHTML = '';
 
-  // Build fields based on provider config
   if (provider.credentialFields && provider.credentialFields.length > 0) {
     provider.credentialFields.forEach(field => {
       const formGroup = document.createElement('div');
@@ -276,12 +253,10 @@ function buildCredentialForm(provider) {
 
       formGroup.appendChild(label);
       formGroup.appendChild(input);
-
       credentialFields.appendChild(formGroup);
     });
   }
 
-  // Set help link
   if (provider.helpUrl) {
     helpLink.href = provider.helpUrl;
     Utils.toggleElement('helpSection', true);
@@ -289,12 +264,11 @@ function buildCredentialForm(provider) {
     Utils.toggleElement('helpSection', false);
   }
 
-  // Enable/disable buttons
   validateCredentials();
 }
 
 /**
- * Validate credential fields
+ * Validate credentials
  */
 function validateCredentials() {
   if (!selectedProvider) return false;
@@ -309,7 +283,6 @@ function validateCredentials() {
     }
   });
 
-  // Enable/disable buttons
   const testBtn = document.getElementById('testConnectionBtn');
   const connectBtn = document.getElementById('connectBtn');
 
@@ -335,7 +308,7 @@ function getCredentials() {
 }
 
 /**
- * Test connection - Static demo mode
+ * Test connection
  */
 async function testConnection() {
   if (!selectedProvider || !validateCredentials()) return;
@@ -348,54 +321,60 @@ async function testConnection() {
   const originalIcon = testBtnIcon.textContent;
 
   try {
-    // Update button state
     testBtn.disabled = true;
     testBtnText.textContent = 'Testing...';
     testBtnIcon.innerHTML = '<div class="loading"></div>';
 
-    // Show loading
     Utils.showLoading(`Testing connection to ${selectedProvider.name}...`);
 
-    // Get credentials
     const credentials = getCredentials();
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (API_CONFIG.workerUrl && !API_CONFIG.demoMode) {
+      // Real API call via Cloudflare Worker
+      const response = await fetch(`${API_CONFIG.workerUrl}/api/test-connection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiToken: credentials.apiToken })
+      });
 
-    Utils.hideLoading();
+      const data = await response.json();
+      Utils.hideLoading();
 
-    // For demo: validate that fields look reasonable
-    const hostnameValid = credentials.hostname && credentials.hostname.includes('http');
-    const usernameValid = credentials.username && credentials.username.length >= 3;
-    const tokenValid = credentials.apiToken && credentials.apiToken.length >= 10;
-
-    if (hostnameValid && usernameValid && tokenValid) {
-      Utils.showAlert(`
-        <strong>Connection Test Mode</strong><br>
-        This is a demo version. In the full version, your credentials would be validated against ${selectedProvider.name}'s API.
-        <br><br>
-        <strong>Your entered details:</strong><br>
-        - Host: ${Utils.sanitize(credentials.hostname)}<br>
-        - Username: ${Utils.sanitize(credentials.username)}<br>
-        - API Token: ****${credentials.apiToken.slice(-4)}
-      `, 'info');
+      if (data.success) {
+        Utils.showAlert(`
+          <strong>✅ Connection Successful!</strong><br>
+          Successfully connected to Hostinger API.
+          ${data.user ? `<br>Account: ${data.user.email || 'N/A'}` : ''}
+        `, 'success');
+      } else {
+        Utils.showAlert(`
+          <strong>❌ Connection Failed</strong><br>
+          ${Utils.sanitize(data.error || 'Unknown error')}
+        `, 'error');
+      }
     } else {
-      Utils.showAlert(`
-        <strong>Invalid Credentials Format</strong><br>
-        Please check your inputs:<br>
-        ${!hostnameValid ? '- Hostname should be a valid URL (e.g., https://server.hostinger.com:2083)<br>' : ''}
-        ${!usernameValid ? '- Username should be at least 3 characters<br>' : ''}
-        ${!tokenValid ? '- API Token should be at least 10 characters<br>' : ''}
-      `, 'warning');
+      // Demo mode
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      Utils.hideLoading();
+
+      if (credentials.apiToken && credentials.apiToken.length >= 20) {
+        Utils.showAlert(`
+          <strong>✅ Demo Mode - Connection Simulated</strong><br>
+          API Token format looks valid. In production, this would verify against Hostinger API.
+          <br><br>
+          <strong>Token:</strong> ****${credentials.apiToken.slice(-8)}
+        `, 'success');
+      } else {
+        Utils.showAlert(`
+          <strong>⚠️ Invalid Token Format</strong><br>
+          API token should be at least 20 characters. Get your token from Hostinger Dashboard > Account Settings > API.
+        `, 'warning');
+      }
     }
   } catch (error) {
     Utils.hideLoading();
-    Utils.showAlert(`
-      <strong>Error</strong><br>
-      ${Utils.sanitize(error.message)}
-    `, 'error');
+    Utils.showAlert(`<strong>❌ Error</strong><br>${Utils.sanitize(error.message)}`, 'error');
   } finally {
-    // Restore button state
     testBtn.disabled = false;
     testBtnText.textContent = originalText;
     testBtnIcon.textContent = originalIcon;
@@ -404,7 +383,7 @@ async function testConnection() {
 }
 
 /**
- * Connect to provider - Static demo mode
+ * Connect to provider
  */
 async function connectToProvider() {
   if (!selectedProvider || !validateCredentials()) return;
@@ -417,75 +396,93 @@ async function connectToProvider() {
   const originalIcon = connectBtnIcon.textContent;
 
   try {
-    // Update button state
     Utils.toggleFormElements('credentialsForm', true);
     connectBtnText.textContent = 'Connecting...';
     connectBtnIcon.innerHTML = '<div class="loading"></div>';
 
-    // Show loading
     Utils.showLoading(`Connecting to ${selectedProvider.name}...`);
 
-    // Get credentials
     const credentials = getCredentials();
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    Utils.hideLoading();
-
-    // For demo: validate that fields look reasonable
-    const hostnameValid = credentials.hostname && credentials.hostname.includes('http');
-    const usernameValid = credentials.username && credentials.username.length >= 3;
-    const tokenValid = credentials.apiToken && credentials.apiToken.length >= 10;
-
-    if (hostnameValid && usernameValid && tokenValid) {
-      // Show success message
-      Utils.showAlert(`
-        <strong>Demo Mode - Connection Simulated</strong><br>
-        In the full version, you would now be connected to ${selectedProvider.name} and ready to scan your sites.
-        <br><br>
-        <em>Backend server required for actual connection functionality.</em>
-      `, 'success');
-
-      // Display connection status (simulated)
-      displayConnectionStatus({
-        provider: selectedProvider.name,
-        serverInfo: {
-          username: credentials.username,
-          email: `${credentials.username}@example.com`,
-          diskUsed: '2500000',
-          diskLimit: '10000000'
-        }
+    if (API_CONFIG.workerUrl && !API_CONFIG.demoMode) {
+      // Real API call
+      const response = await fetch(`${API_CONFIG.workerUrl}/api/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiToken: credentials.apiToken })
       });
 
-      // Show next step button
-      Utils.toggleElement('nextStepBtn', true);
+      const data = await response.json();
+      Utils.hideLoading();
 
-      // Save state to localStorage
-      Utils.setStorage('migration_provider', {
-        id: selectedProvider.id,
-        name: selectedProvider.name,
-        demo: true
-      });
+      if (data.success) {
+        Utils.showAlert(`
+          <strong>✅ Connected to Hostinger!</strong><br>
+          Ready to scan your sites.
+        `, 'success');
+
+        displayConnectionStatus({
+          provider: 'Hostinger',
+          serverInfo: {
+            username: data.user?.email || 'User',
+            email: data.user?.email || 'N/A',
+            subscriptions: data.subscriptions?.length || 0
+          }
+        });
+
+        // Save to localStorage
+        Utils.setStorage('migration_provider', {
+          id: selectedProvider.id,
+          name: selectedProvider.name,
+          apiToken: credentials.apiToken, // Stored for subsequent API calls
+          user: data.user
+        });
+
+        Utils.toggleElement('nextStepBtn', true);
+      } else {
+        Utils.showAlert(`<strong>❌ Connection Failed</strong><br>${Utils.sanitize(data.error)}`, 'error');
+        Utils.toggleFormElements('credentialsForm', false);
+        connectBtnText.textContent = originalText;
+        connectBtnIcon.textContent = originalIcon;
+      }
     } else {
-      Utils.showAlert(`
-        <strong>Invalid Credentials Format</strong><br>
-        Please ensure all fields are filled correctly.
-      `, 'error');
+      // Demo mode
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      Utils.hideLoading();
 
-      // Re-enable form
-      Utils.toggleFormElements('credentialsForm', false);
-      connectBtnText.textContent = originalText;
-      connectBtnIcon.textContent = originalIcon;
+      if (credentials.apiToken && credentials.apiToken.length >= 20) {
+        Utils.showAlert(`
+          <strong>✅ Demo Mode - Connected!</strong><br>
+          In production, you would now be connected to Hostinger and ready to scan sites.
+        `, 'success');
+
+        displayConnectionStatus({
+          provider: 'Hostinger',
+          serverInfo: {
+            username: 'demo_user',
+            email: 'demo@example.com',
+            subscriptions: 2
+          }
+        });
+
+        Utils.setStorage('migration_provider', {
+          id: selectedProvider.id,
+          name: selectedProvider.name,
+          apiToken: credentials.apiToken,
+          demo: true
+        });
+
+        Utils.toggleElement('nextStepBtn', true);
+      } else {
+        Utils.showAlert(`<strong>❌ Invalid Token</strong><br>Please enter a valid API token.`, 'error');
+        Utils.toggleFormElements('credentialsForm', false);
+        connectBtnText.textContent = originalText;
+        connectBtnIcon.textContent = originalIcon;
+      }
     }
   } catch (error) {
     Utils.hideLoading();
-    Utils.showAlert(`
-      <strong>Error</strong><br>
-      ${Utils.sanitize(error.message)}
-    `, 'error');
-
-    // Re-enable form
+    Utils.showAlert(`<strong>❌ Error</strong><br>${Utils.sanitize(error.message)}`, 'error');
     Utils.toggleFormElements('credentialsForm', false);
     connectBtnText.textContent = originalText;
     connectBtnIcon.textContent = originalIcon;
@@ -502,24 +499,16 @@ function displayConnectionStatus(response) {
   const statusEmail = document.getElementById('statusEmail');
   const statusDisk = document.getElementById('statusDisk');
 
-  // Show status card
   Utils.toggleElement('connectionStatus', true);
-
-  // Fill in details
   statusProvider.textContent = response.provider || 'N/A';
 
   if (response.serverInfo) {
     statusUsername.textContent = response.serverInfo.username || 'N/A';
     statusEmail.textContent = response.serverInfo.email || 'N/A';
-    statusDisk.textContent = response.serverInfo.diskUsed
-      ? `${Utils.formatBytes(parseInt(response.serverInfo.diskUsed) * 1024)} / ${Utils.formatBytes(parseInt(response.serverInfo.diskLimit || 0) * 1024)}`
+    statusDisk.textContent = response.serverInfo.subscriptions
+      ? `${response.serverInfo.subscriptions} subscription(s)`
       : 'N/A';
-  } else {
-    statusUsername.textContent = 'N/A';
-    statusEmail.textContent = 'N/A';
-    statusDisk.textContent = 'N/A';
   }
 
-  // Scroll to status card
   statusCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
