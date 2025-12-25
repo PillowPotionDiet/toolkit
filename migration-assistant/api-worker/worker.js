@@ -314,11 +314,12 @@ async function handleListSites(request, env, origin) {
       orders = Array.isArray(ordersData) ? ordersData : (ordersData.data || ordersData.orders || []);
     }
 
-    // Process websites
+    // Process websites - only add entries that look like domains (contain a dot)
     if (Array.isArray(websites)) {
       websites.forEach((site) => {
-        const domain = site.domain || site.name || site.hostname || site.url;
-        if (domain && !allSites.some(s => s.domain === domain)) {
+        const domain = site.domain || site.hostname || site.url;
+        // Only add if it looks like a domain (contains a dot) - skip product names
+        if (domain && domain.includes('.') && !allSites.some(s => s.domain === domain)) {
           allSites.push({
             id: allSites.length + 1,
             domain: domain,
@@ -361,6 +362,7 @@ async function handleListSites(request, env, origin) {
     }
 
     // Process subscriptions for additional domains
+    // Note: Only add actual domains (containing a dot), not product names like "Cloud Startup"
     if (Array.isArray(subscriptions)) {
       subscriptions.forEach((sub) => {
         // Check for domains in subscription
@@ -368,7 +370,8 @@ async function handleListSites(request, env, origin) {
         if (Array.isArray(subDomains)) {
           subDomains.forEach((d) => {
             const domainName = typeof d === 'string' ? d : (d.domain || d.name);
-            if (domainName && !allSites.some(s => s.domain === domainName)) {
+            // Only add if it looks like a domain (contains a dot)
+            if (domainName && domainName.includes('.') && !allSites.some(s => s.domain === domainName)) {
               allSites.push({
                 id: allSites.length + 1,
                 domain: domainName,
@@ -383,9 +386,9 @@ async function handleListSites(request, env, origin) {
             }
           });
         }
-        // Also check main domain of subscription
-        const mainDomain = sub.domain || sub.name;
-        if (mainDomain && !allSites.some(s => s.domain === mainDomain)) {
+        // Also check main domain of subscription - only if it looks like a domain
+        const mainDomain = sub.domain;
+        if (mainDomain && mainDomain.includes('.') && !allSites.some(s => s.domain === mainDomain)) {
           allSites.push({
             id: allSites.length + 1,
             domain: mainDomain,
