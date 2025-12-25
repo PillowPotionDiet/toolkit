@@ -286,6 +286,9 @@ function filterSites() {
 function renderSites(sitesToRender) {
   const container = document.getElementById('sitesList');
 
+  // Update total count display
+  updateTotalCount(sitesToRender.length);
+
   if (sitesToRender.length === 0) {
     container.innerHTML = `
       <div class="no-sites">
@@ -325,6 +328,14 @@ function createSiteCard(site) {
   const isSelected = selectedSites.has(site.id);
   const cmsInfo = getCmsInfo(site.cms);
 
+  // Only show CMS badge if it's known (not 'unknown')
+  const cmsBadge = site.cms && site.cms !== 'unknown'
+    ? `<span class="cms-badge cms-${site.cms}">${cmsInfo.icon} ${cmsInfo.name}${site.cmsVersion ? ' ' + site.cmsVersion : ''}</span>`
+    : '';
+
+  // Show source badge instead if no CMS detected
+  const sourceBadge = site.source ? `<span class="source-badge">${site.source}</span>` : '';
+
   return `
     <div class="site-card ${isSelected ? 'selected' : ''}" data-site-id="${site.id}">
       <div class="site-header">
@@ -332,38 +343,13 @@ function createSiteCard(site) {
         <div class="site-info">
           <div class="site-domain">
             ${site.domain}
-            <span class="cms-badge cms-${site.cms}">${cmsInfo.icon} ${cmsInfo.name}${site.cmsVersion ? ' ' + site.cmsVersion : ''}</span>
+            ${cmsBadge}
             ${site.hasGit ? '<span class="git-badge">Git</span>' : ''}
           </div>
           <div class="site-path">${site.path}</div>
         </div>
       </div>
-      <div class="site-stats">
-        <div class="stat-item">
-          <div class="stat-value">${site.stats.files.toLocaleString()}</div>
-          <div class="stat-label">Files</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${Utils.formatBytes(site.stats.size)}</div>
-          <div class="stat-label">Size</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${site.stats.databases}</div>
-          <div class="stat-label">Databases</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${Utils.formatBytes(site.stats.dbSize)}</div>
-          <div class="stat-label">DB Size</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${site.stats.emails}</div>
-          <div class="stat-label">Emails</div>
-        </div>
-      </div>
       <div class="site-actions">
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewSiteDetails(${site.id})">
-          👁️ View Details
-        </button>
         <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); previewSite('${site.domain}')">
           🌐 Preview
         </button>
@@ -458,6 +444,16 @@ function updateSelectionInfo() {
   document.getElementById('downloadFilesBtn').disabled = !hasSelection;
   document.getElementById('downloadDbBtn').disabled = !hasSelection;
   document.getElementById('downloadAllBtn').disabled = !hasSelection;
+}
+
+/**
+ * Update total sites count display
+ */
+function updateTotalCount(count) {
+  const totalCountEl = document.getElementById('totalSitesCount');
+  if (totalCountEl) {
+    totalCountEl.textContent = count;
+  }
 }
 
 /**

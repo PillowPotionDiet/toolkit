@@ -26,7 +26,6 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 1rem;
     }
     .site-checkbox {
       width: 22px;
@@ -228,7 +227,7 @@
         <div class="card-header">
           <h1 class="card-title">Step 2: Select Sites to Migrate</h1>
           <p class="card-description">
-            Choose which websites you want to migrate. We've detected the CMS type and gathered statistics for each site.
+            Choose which websites you want to migrate from your Hostinger account.
           </p>
         </div>
 
@@ -236,13 +235,20 @@
           <!-- Alert Container -->
           <div id="alertContainer"></div>
 
-          <!-- Filter Bar -->
+          <!-- Sites Count & Filter Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div class="sites-count" style="font-size: 1.1rem;">
+              <strong id="totalSitesCount">0</strong> sites found
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-outline btn-sm" id="selectAllBtn">Select All</button>
+              <button class="btn btn-outline btn-sm" id="deselectAllBtn">Deselect All</button>
+            </div>
+          </div>
+
+          <!-- Search Bar -->
           <div class="filter-bar">
             <input type="text" class="search-input" id="searchInput" placeholder="Search sites...">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="wordpress">WordPress</button>
-            <button class="filter-btn" data-filter="custom">Custom/Other</button>
-            <button class="filter-btn" data-filter="git">Git Deployed</button>
           </div>
 
           <!-- Sites List -->
@@ -257,11 +263,6 @@
           <div class="selection-bar" id="selectionBar" style="display: none;">
             <div class="selection-info">
               <strong id="selectedCount">0</strong> sites selected
-              (<span id="selectedSize">0 MB</span> total)
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-outline btn-sm" id="selectAllBtn">Select All</button>
-              <button class="btn btn-outline btn-sm" id="deselectAllBtn">Deselect All</button>
             </div>
           </div>
         </div>
