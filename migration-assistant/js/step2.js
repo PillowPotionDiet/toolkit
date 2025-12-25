@@ -358,7 +358,7 @@ function renderSites(sitesToRender) {
   // Wrap site cards in a 2-column grid
   container.innerHTML = `
     <div class="sites-grid">
-      ${sitesToRender.map(site => createSiteCard(site)).join('')}
+      ${sitesToRender.map((site, index) => createSiteCard(site, index)).join('')}
     </div>
   `;
 
@@ -386,7 +386,7 @@ function renderSites(sitesToRender) {
 /**
  * Create site card HTML
  */
-function createSiteCard(site) {
+function createSiteCard(site, index) {
   const isSelected = selectedSites.has(site.id);
   const cmsInfo = getCmsInfo(site.cms);
 
@@ -401,6 +401,7 @@ function createSiteCard(site) {
   return `
     <div class="site-card ${isSelected ? 'selected' : ''}" data-site-id="${site.id}">
       <div class="site-header">
+        <span class="site-sr-no">${index + 1}</span>
         <input type="checkbox" class="site-checkbox" data-site-id="${site.id}" ${isSelected ? 'checked' : ''}>
         <div class="site-info">
           <div class="site-domain">
