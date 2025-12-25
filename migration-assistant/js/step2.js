@@ -484,17 +484,8 @@ function deselectAll() {
  */
 function updateSelectionInfo() {
   const count = selectedSites.size;
-  let totalSize = 0;
-
-  selectedSites.forEach(id => {
-    const site = sites.find(s => s.id === id);
-    if (site) {
-      totalSize += site.stats.size + site.stats.dbSize;
-    }
-  });
 
   document.getElementById('selectedCount').textContent = count;
-  document.getElementById('selectedSize').textContent = Utils.formatBytes(totalSize);
 
   // Enable/disable buttons
   const hasSelection = count > 0;
@@ -502,6 +493,9 @@ function updateSelectionInfo() {
   document.getElementById('downloadFilesBtn').disabled = !hasSelection;
   document.getElementById('downloadDbBtn').disabled = !hasSelection;
   document.getElementById('downloadAllBtn').disabled = !hasSelection;
+
+  // Show/hide selection bar
+  document.getElementById('selectionBar').style.display = hasSelection ? 'flex' : 'none';
 }
 
 /**
@@ -541,7 +535,7 @@ function previewSite(domain) {
 }
 
 /**
- * Download sites (demo)
+ * Download sites - shows hPanel download guide with direct links
  */
 async function downloadSites(type) {
   if (selectedSites.size === 0) {
@@ -549,32 +543,260 @@ async function downloadSites(type) {
     return;
   }
 
-  const typeLabels = {
-    files: 'files',
-    databases: 'databases',
-    all: 'files and databases'
-  };
+  // Get selected site data
+  const selectedSiteData = Array.from(selectedSites).map(id => {
+    const site = sites.find(s => s.id === id);
+    return site ? { id: site.id, domain: site.domain, path: site.path, cms: site.cms } : null;
+  }).filter(Boolean);
 
-  Utils.showLoading(`Preparing ${typeLabels[type]} for download...`);
+  // Save selected sites for migration
+  Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-  // Simulate download preparation
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  Utils.hideLoading();
-
-  Utils.showAlert(`
-    <strong>Demo Mode</strong><br><br>
-    In the full version, ${selectedSites.size} site(s) would be downloaded as ${typeLabels[type]}.<br><br>
-    <strong>Selected sites:</strong><br>
-    ${Array.from(selectedSites).map(id => {
-      const site = sites.find(s => s.id === id);
-      return site ? `• ${site.domain}` : '';
-    }).join('<br>')}
-  `, 'info');
+  // Show download guide modal
+  showDownloadGuide(selectedSiteData, type);
 }
 
 /**
- * Go to next step - shows FTP modal first
+ * Show download guide with step-by-step instructions
+ */
+function showDownloadGuide(sites, type) {
+  const typeConfig = {
+    files: {
+      title: 'Download Website Files',
+      icon: '📁',
+      steps: [
+        'Click on a site below to open it in hPanel',
+        'Navigate to <strong>Files → Backups</strong>',
+        'Select the most recent backup date',
+        'Click <strong>Download</strong> and choose <strong>Files</strong>',
+        'Save the .tar.gz file to your computer'
+      ],
+      hpanelPath: '/hosting/backups'
+    },
+    databases: {
+      title: 'Download Databases',
+      icon: '🗄️',
+      steps: [
+        'Click on a site below to open it in hPanel',
+        'Navigate to <strong>Databases → MySQL Databases</strong>',
+        'Click <strong>Enter phpMyAdmin</strong> for your database',
+        'Go to <strong>Export</strong> tab',
+        'Click <strong>Export</strong> to download the .sql file'
+      ],
+      hpanelPath: '/hosting/mysql'
+    },
+    all: {
+      title: 'Download Complete Backup',
+      icon: '📦',
+      steps: [
+        'Click on a site below to open it in hPanel',
+        'Navigate to <strong>Files → Backups</strong>',
+        'Download both <strong>Files</strong> and <strong>Databases</strong>',
+        'Repeat for each selected site',
+        'Keep all files organized by domain name'
+      ],
+      hpanelPath: '/hosting/backups'
+    }
+  };
+
+  const config = typeConfig[type];
+
+  // Build site links HTML
+  const siteLinksHtml = sites.map((site, index) => `
+    <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid var(--border-color);">
+      <span style="background: var(--primary-color); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${index + 1}</span>
+      <span style="flex: 1; font-weight: 500;">${site.domain}</span>
+      <a href="https://hpanel.hostinger.com/websites/${site.domain}${config.hpanelPath}" target="_blank"
+         class="btn btn-sm btn-outline" style="text-decoration: none; font-size: 0.8rem;">
+        Open in hPanel →
+      </a>
+    </div>
+  `).join('');
+
+  // Create and show modal
+  const modalHtml = `
+    <div id="downloadGuideModal" class="modal-overlay">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>${config.icon} ${config.title}</h2>
+          <button class="modal-close" onclick="closeDownloadGuide()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Steps -->
+          <div style="margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-secondary);">Steps to Download:</h3>
+            <ol style="margin: 0; padding-left: 1.25rem; line-height: 1.8;">
+              ${config.steps.map(step => `<li>${step}</li>`).join('')}
+            </ol>
+          </div>
+
+          <!-- Site List -->
+          <div style="margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: var(--text-secondary);">Your Selected Sites (${sites.length}):</h3>
+            <div style="max-height: 250px; overflow-y: auto;">
+              ${siteLinksHtml}
+            </div>
+          </div>
+
+          <!-- Important Note -->
+          <div style="padding: 1rem; background: #FEF3C7; border-radius: var(--radius-md); margin-bottom: 1rem;">
+            <strong>💡 Important:</strong>
+            <ul style="margin: 0.5rem 0 0 1rem; padding: 0; font-size: 0.9rem;">
+              <li>Save files in a folder named after each domain</li>
+              <li>Keep both files and database backups together</li>
+              <li>You'll need these files in Step 3 to upload to your new account</li>
+            </ul>
+          </div>
+
+          <!-- Tracking Checklist -->
+          <div style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Track Your Downloads:</h4>
+            <div id="downloadChecklist">
+              ${sites.map(site => `
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" class="download-check" data-domain="${site.domain}" style="width: 18px; height: 18px;">
+                  <span>${site.domain}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeDownloadGuide()">Close</button>
+            <button class="btn btn-success" id="markDownloadsComplete" onclick="markDownloadsComplete()">
+              ✓ I've Downloaded All Files
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add modal styles if not present
+  if (!document.getElementById('downloadGuideStyles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'downloadGuideStyles';
+    styleEl.textContent = `
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+      }
+      .modal-content {
+        background: white;
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .modal-header h2 {
+        font-size: 1.25rem;
+        margin: 0;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.75rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+        line-height: 1;
+        padding: 0;
+      }
+      .modal-close:hover {
+        color: var(--text-primary);
+      }
+      .modal-body {
+        padding: 1.5rem;
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  // Remove existing modal if any
+  const existingModal = document.getElementById('downloadGuideModal');
+  if (existingModal) existingModal.remove();
+
+  // Add modal to page
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  // Setup checklist change handler
+  document.querySelectorAll('.download-check').forEach(checkbox => {
+    checkbox.addEventListener('change', updateDownloadProgress);
+  });
+}
+
+/**
+ * Close download guide modal
+ */
+function closeDownloadGuide() {
+  const modal = document.getElementById('downloadGuideModal');
+  if (modal) modal.remove();
+}
+
+/**
+ * Update download progress based on checklist
+ */
+function updateDownloadProgress() {
+  const checkboxes = document.querySelectorAll('.download-check');
+  const checked = document.querySelectorAll('.download-check:checked');
+  const allChecked = checkboxes.length === checked.length;
+
+  const completeBtn = document.getElementById('markDownloadsComplete');
+  if (completeBtn) {
+    completeBtn.disabled = false; // Always allow marking complete
+    if (allChecked) {
+      completeBtn.classList.add('pulse');
+    }
+  }
+}
+
+/**
+ * Mark downloads as complete and save state
+ */
+function markDownloadsComplete() {
+  const checkedDomains = [];
+  document.querySelectorAll('.download-check:checked').forEach(cb => {
+    checkedDomains.push(cb.dataset.domain);
+  });
+
+  // Save download status
+  const migrationData = Utils.getStorage('migration_data') || {};
+  migrationData.downloadedSites = checkedDomains;
+  migrationData.downloadCompleted = true;
+  migrationData.downloadDate = new Date().toISOString();
+  Utils.setStorage('migration_data', migrationData);
+
+  closeDownloadGuide();
+
+  Utils.showAlert(`
+    <strong>✅ Downloads Marked Complete!</strong><br><br>
+    ${checkedDomains.length} site(s) ready for migration.<br><br>
+    <strong>Next Step:</strong> Click "Next: Connect New Account" to continue with Step 3.
+  `, 'success');
+
+  // Enable next button if not already
+  document.getElementById('nextStepBtn').disabled = false;
+}
+
+/**
+ * Go to next step
  */
 function goToNextStep() {
   if (selectedSites.size === 0) {
@@ -583,87 +805,16 @@ function goToNextStep() {
   }
 
   // Save selected sites to localStorage
-  Utils.setStorage('migration_selected_sites', Array.from(selectedSites));
+  const selectedSiteData = Array.from(selectedSites).map(id => {
+    const site = sites.find(s => s.id === id);
+    return site ? { id: site.id, domain: site.domain, path: site.path } : null;
+  }).filter(Boolean);
 
-  // Show FTP credentials modal
-  showFtpModal();
-}
+  Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-/**
- * Show FTP credentials modal
- */
-function showFtpModal() {
-  const modal = document.getElementById('ftpModal');
-  modal.classList.remove('hidden');
-
-  // Focus first input
-  document.getElementById('ftpHost').focus();
-
-  // Setup form submit handler
-  const ftpForm = document.getElementById('ftpForm');
-  ftpForm.onsubmit = handleFtpSubmit;
-}
-
-/**
- * Close FTP modal
- */
-function closeFtpModal() {
-  document.getElementById('ftpModal').classList.add('hidden');
-}
-
-/**
- * Handle FTP form submission
- */
-async function handleFtpSubmit(e) {
-  e.preventDefault();
-
-  const ftpHost = document.getElementById('ftpHost').value.trim();
-  const ftpUsername = document.getElementById('ftpUsername').value.trim();
-  const ftpPassword = document.getElementById('ftpPassword').value;
-
-  if (!ftpHost || !ftpUsername || !ftpPassword) {
-    Utils.showAlert('Please fill in all FTP credentials.', 'warning');
-    return;
-  }
-
-  const submitBtn = document.getElementById('ftpSubmitBtn');
-  const btnText = document.getElementById('ftpBtnText');
-  const btnIcon = document.getElementById('ftpBtnIcon');
-
-  const originalText = btnText.textContent;
-  const originalIcon = btnIcon.textContent;
-
-  try {
-    submitBtn.disabled = true;
-    btnText.textContent = 'Verifying...';
-    btnIcon.innerHTML = '<div class="loading" style="width: 16px; height: 16px;"></div>';
-
-    // Save FTP credentials to localStorage
-    const provider = Utils.getStorage('migration_provider') || {};
-    provider.ftp = {
-      host: ftpHost,
-      username: ftpUsername,
-      password: ftpPassword
-    };
-    Utils.setStorage('migration_provider', provider);
-
-    // Simulate FTP connection test (in real implementation, this would call the worker)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    closeFtpModal();
-
-    Utils.showAlert(`
-      <strong>✅ FTP Credentials Saved!</strong><br><br>
-      ${selectedSites.size} site(s) selected for migration.<br><br>
-      <strong>Next:</strong> Step 3 (Connect New Account) is coming in Phase 3.<br>
-      FTP credentials will be used to download files during migration.
-    `, 'success');
-
-  } catch (error) {
-    Utils.showAlert(`<strong>Error:</strong> ${error.message}`, 'error');
-  } finally {
-    submitBtn.disabled = false;
-    btnText.textContent = originalText;
-    btnIcon.textContent = originalIcon;
-  }
+  Utils.showAlert(`
+    <strong>✅ ${selectedSites.size} site(s) selected!</strong><br><br>
+    Step 3 (Connect New Hostinger Account) is coming soon.<br>
+    You can download the selected sites using the Download Options below.
+  `, 'success');
 }

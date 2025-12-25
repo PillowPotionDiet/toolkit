@@ -67,6 +67,14 @@ export default {
         return await handleDiscoverSites(request, env, origin);
       }
 
+      if (path === '/api/request-backup') {
+        return await handleRequestBackup(request, env, origin);
+      }
+
+      if (path === '/api/check-backup-status') {
+        return await handleCheckBackupStatus(request, env, origin);
+      }
+
       // Health check
       if (path === '/api/health') {
         return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() }, origin);
@@ -791,6 +799,142 @@ async function handleListEmails(request, env, origin) {
     return jsonResponse({
       success: false,
       error: 'Failed to list emails: ' + error.message
+    }, origin, 500);
+  }
+}
+
+/**
+ * Request backup for a site
+ * Note: Hostinger's public API doesn't have a direct backup endpoint for shared hosting
+ * This endpoint provides guidance on how to download backups manually
+ */
+async function handleRequestBackup(request, env, origin) {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, origin, 405);
+  }
+
+  const body = await request.json();
+  const { apiToken, domains } = body;
+
+  if (!apiToken || !domains || !Array.isArray(domains)) {
+    return jsonResponse({ error: 'API token and domains array required' }, origin, 400);
+  }
+
+  try {
+    // Check if user has VPS (VPS has backup API endpoints)
+    const subscriptionsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    let hasVPS = false;
+    let vpsIds = [];
+
+    if (subscriptionsResponse.ok) {
+      const subscriptions = await subscriptionsResponse.json();
+      const subs = Array.isArray(subscriptions) ? subscriptions : (subscriptions.data || []);
+
+      // Check for VPS subscriptions
+      subs.forEach(sub => {
+        if (sub.product_type === 'vps' || sub.type === 'vps' ||
+            (sub.name && sub.name.toLowerCase().includes('vps'))) {
+          hasVPS = true;
+          if (sub.id) vpsIds.push(sub.id);
+        }
+      });
+    }
+
+    if (hasVPS && vpsIds.length > 0) {
+      // For VPS, we can potentially use the backup API
+      return jsonResponse({
+        success: true,
+        type: 'vps',
+        message: 'VPS detected. You can use the VPS backup API to manage backups.',
+        vpsIds: vpsIds,
+        instructions: [
+          'VPS backups are available through the Hostinger API.',
+          'Use /api/vps/v1/virtual-machines/{id}/backups to list backups.',
+          'Use /api/vps/v1/virtual-machines/{id}/snapshot to create a snapshot.'
+        ]
+      }, origin);
+    }
+
+    // For shared hosting, provide manual download instructions
+    return jsonResponse({
+      success: true,
+      type: 'shared_hosting',
+      message: 'Shared hosting backups must be downloaded manually via hPanel.',
+      domains: domains,
+      instructions: [
+        'Log in to hPanel (hpanel.hostinger.com)',
+        'Select your website from the dashboard',
+        'Go to Files → Backups',
+        'Choose your backup date and click Download',
+        'For databases: Go to Databases → MySQL Databases → Export'
+      ],
+      hpanelUrl: 'https://hpanel.hostinger.com',
+      note: 'Hostinger provides automated weekly backups. Business plans and higher have daily backups.'
+    }, origin);
+
+  } catch (error) {
+    return jsonResponse({
+      success: false,
+      error: 'Failed to process backup request: ' + error.message
+    }, origin, 500);
+  }
+}
+
+/**
+ * Check backup status (for VPS only)
+ */
+async function handleCheckBackupStatus(request, env, origin) {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, origin, 405);
+  }
+
+  const body = await request.json();
+  const { apiToken, vpsId } = body;
+
+  if (!apiToken || !vpsId) {
+    return jsonResponse({ error: 'API token and VPS ID required' }, origin, 400);
+  }
+
+  try {
+    const response = await fetch(
+      `${HOSTINGER_API_BASE}/api/vps/v1/virtual-machines/${vpsId}/backups`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      return jsonResponse({
+        success: false,
+        error: 'Failed to fetch backup status'
+      }, origin, response.status);
+    }
+
+    const backups = await response.json();
+
+    return jsonResponse({
+      success: true,
+      backups: backups
+    }, origin);
+
+  } catch (error) {
+    return jsonResponse({
+      success: false,
+      error: 'Failed to check backup status: ' + error.message
     }, origin, 500);
   }
 }
