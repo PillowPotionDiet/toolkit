@@ -234,7 +234,15 @@ async function handleListSites(request, env, origin) {
   }
 
   try {
-    // Fetch websites from hosting API
+    const allSites = [];
+    const debug = {
+      websitesStatus: null,
+      domainsStatus: null,
+      subscriptionsStatus: null,
+      ordersStatus: null
+    };
+
+    // 1. Fetch websites from hosting API
     const websitesResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/hosting/v1/websites`,
       {
@@ -244,13 +252,15 @@ async function handleListSites(request, env, origin) {
         }
       }
     );
+    debug.websitesStatus = websitesResponse.status;
 
     let websites = [];
     if (websitesResponse.ok) {
-      websites = await websitesResponse.json();
+      const websitesData = await websitesResponse.json();
+      websites = Array.isArray(websitesData) ? websitesData : (websitesData.data || websitesData.websites || []);
     }
 
-    // Also fetch domains portfolio
+    // 2. Fetch domains portfolio
     const domainsResponse = await fetch(
       `${HOSTINGER_API_BASE}/api/domains/v1/portfolio`,
       {
@@ -260,60 +270,132 @@ async function handleListSites(request, env, origin) {
         }
       }
     );
+    debug.domainsStatus = domainsResponse.status;
 
     let domains = [];
     if (domainsResponse.ok) {
-      domains = await domainsResponse.json();
+      const domainsData = await domainsResponse.json();
+      domains = Array.isArray(domainsData) ? domainsData : (domainsData.data || domainsData.domains || []);
     }
 
-    // Combine and format sites
-    const sites = [];
+    // 3. Fetch subscriptions to get hosting plans with websites
+    const subscriptionsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    debug.subscriptionsStatus = subscriptionsResponse.status;
 
-    // Add websites
+    let subscriptions = [];
+    if (subscriptionsResponse.ok) {
+      const subsData = await subscriptionsResponse.json();
+      subscriptions = Array.isArray(subsData) ? subsData : (subsData.data || subsData.subscriptions || []);
+    }
+
+    // 4. Fetch orders to get more site info
+    const ordersResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/hosting/v1/orders`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    debug.ordersStatus = ordersResponse.status;
+
+    let orders = [];
+    if (ordersResponse.ok) {
+      const ordersData = await ordersResponse.json();
+      orders = Array.isArray(ordersData) ? ordersData : (ordersData.data || ordersData.orders || []);
+    }
+
+    // Process websites
     if (Array.isArray(websites)) {
-      websites.forEach((site, index) => {
-        sites.push({
-          id: index + 1,
-          domain: site.domain || site.name || `Website ${index + 1}`,
-          path: site.path || '/public_html',
-          cms: site.cms || 'unknown',
-          cmsVersion: site.cmsVersion || null,
-          hasGit: false,
-          stats: {
-            files: site.files || 0,
-            size: site.size || 0,
-            databases: site.databases || 0,
-            dbSize: site.dbSize || 0,
-            emails: site.emails || 0
-          },
-          lastModified: site.updatedAt || site.createdAt || new Date().toISOString().split('T')[0],
-          source: 'hosting'
-        });
+      websites.forEach((site) => {
+        const domain = site.domain || site.name || site.hostname || site.url;
+        if (domain && !allSites.some(s => s.domain === domain)) {
+          allSites.push({
+            id: allSites.length + 1,
+            domain: domain,
+            path: site.path || site.document_root || '/public_html',
+            cms: site.cms || site.platform || 'unknown',
+            cmsVersion: site.cmsVersion || site.version || null,
+            hasGit: site.hasGit || false,
+            stats: {
+              files: site.files || site.file_count || 0,
+              size: site.size || site.disk_usage || 0,
+              databases: site.databases || site.database_count || 0,
+              dbSize: site.dbSize || site.database_size || 0,
+              emails: site.emails || site.email_count || 0
+            },
+            lastModified: site.updatedAt || site.updated_at || site.createdAt || site.created_at || new Date().toISOString().split('T')[0],
+            source: 'website'
+          });
+        }
       });
     }
 
-    // Add domains not already in websites
+    // Process domains
     if (Array.isArray(domains)) {
-      domains.forEach((domain, index) => {
-        const domainName = domain.domain || domain.name || domain;
-        const exists = sites.some(s => s.domain === domainName);
-        if (!exists) {
-          sites.push({
-            id: sites.length + 1,
+      domains.forEach((domain) => {
+        const domainName = typeof domain === 'string' ? domain : (domain.domain || domain.name || domain.hostname);
+        if (domainName && !allSites.some(s => s.domain === domainName)) {
+          allSites.push({
+            id: allSites.length + 1,
             domain: domainName,
             path: '/public_html',
             cms: 'unknown',
             cmsVersion: null,
             hasGit: false,
-            stats: {
-              files: 0,
-              size: 0,
-              databases: 0,
-              dbSize: 0,
-              emails: 0
-            },
-            lastModified: domain.expiresAt || new Date().toISOString().split('T')[0],
+            stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+            lastModified: domain.expires_at || domain.expiresAt || new Date().toISOString().split('T')[0],
             source: 'domain'
+          });
+        }
+      });
+    }
+
+    // Process subscriptions for additional domains
+    if (Array.isArray(subscriptions)) {
+      subscriptions.forEach((sub) => {
+        // Check for domains in subscription
+        const subDomains = sub.domains || sub.websites || [];
+        if (Array.isArray(subDomains)) {
+          subDomains.forEach((d) => {
+            const domainName = typeof d === 'string' ? d : (d.domain || d.name);
+            if (domainName && !allSites.some(s => s.domain === domainName)) {
+              allSites.push({
+                id: allSites.length + 1,
+                domain: domainName,
+                path: '/public_html',
+                cms: 'unknown',
+                cmsVersion: null,
+                hasGit: false,
+                stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+                lastModified: sub.created_at || new Date().toISOString().split('T')[0],
+                source: 'subscription'
+              });
+            }
+          });
+        }
+        // Also check main domain of subscription
+        const mainDomain = sub.domain || sub.name;
+        if (mainDomain && !allSites.some(s => s.domain === mainDomain)) {
+          allSites.push({
+            id: allSites.length + 1,
+            domain: mainDomain,
+            path: '/public_html',
+            cms: 'unknown',
+            cmsVersion: null,
+            hasGit: false,
+            stats: { files: 0, size: 0, databases: 0, dbSize: 0, emails: 0 },
+            lastModified: sub.created_at || new Date().toISOString().split('T')[0],
+            source: 'subscription'
           });
         }
       });
@@ -321,9 +403,18 @@ async function handleListSites(request, env, origin) {
 
     return jsonResponse({
       success: true,
-      sites: sites,
-      websitesRaw: websites,
-      domainsRaw: domains
+      sites: allSites,
+      debug: debug,
+      raw: {
+        websitesCount: websites.length,
+        domainsCount: domains.length,
+        subscriptionsCount: subscriptions.length,
+        ordersCount: orders.length,
+        websites: websites,
+        domains: domains,
+        subscriptions: subscriptions,
+        orders: orders
+      }
     }, origin);
 
   } catch (error) {

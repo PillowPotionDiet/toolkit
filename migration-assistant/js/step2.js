@@ -127,8 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadConnectionInfo() {
   const provider = Utils.getStorage('migration_provider');
   if (provider) {
-    document.getElementById('connectedProvider').textContent = provider.name;
-    document.getElementById('connectedUser').textContent = provider.username || 'demo_user';
+    document.getElementById('connectedProvider').textContent = provider.name || 'Hostinger';
+    // Use email from user object, or show subscription count
+    const userDisplay = provider.user?.email ||
+                        (provider.user?.subscriptionCount ? `${provider.user.subscriptionCount} subscription(s)` : 'Connected');
+    document.getElementById('connectedUser').textContent = userDisplay;
   }
 }
 
@@ -171,6 +174,7 @@ async function loadSites() {
   if (API_CONFIG.workerUrl && !API_CONFIG.demoMode && provider?.apiToken) {
     // Real API mode
     try {
+      console.log('Fetching sites from API...');
       const response = await fetch(`${API_CONFIG.workerUrl}/api/list-sites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -178,12 +182,21 @@ async function loadSites() {
       });
 
       const data = await response.json();
+      console.log('API Response:', data);
 
-      if (data.success && data.sites) {
+      // Log debug info
+      if (data.debug) {
+        console.log('API Debug Info:', data.debug);
+      }
+      if (data.raw) {
+        console.log('Raw API Data:', data.raw);
+      }
+
+      if (data.success && data.sites && data.sites.length > 0) {
         sites = data.sites.map((site, index) => ({
-          id: index + 1,
+          id: site.id || index + 1,
           domain: site.domain || site.name,
-          path: site.path || `/home/user/${site.domain}`,
+          path: site.path || `/public_html`,
           cms: site.cms || 'unknown',
           cmsVersion: site.cmsVersion || null,
           hasGit: site.hasGit || false,
@@ -194,18 +207,45 @@ async function loadSites() {
             dbSize: site.stats?.dbSize || 0,
             emails: site.stats?.emails || 0
           },
-          lastModified: site.lastModified || new Date().toISOString().split('T')[0]
+          lastModified: site.lastModified || new Date().toISOString().split('T')[0],
+          source: site.source || 'api'
         }));
+
+        console.log('Processed sites:', sites);
+
+        // Show info about what was loaded
+        if (data.raw) {
+          const sources = [];
+          if (data.raw.websitesCount > 0) sources.push(`${data.raw.websitesCount} website(s)`);
+          if (data.raw.domainsCount > 0) sources.push(`${data.raw.domainsCount} domain(s)`);
+          if (data.raw.subscriptionsCount > 0) sources.push(`${data.raw.subscriptionsCount} subscription(s)`);
+
+          if (sources.length > 0) {
+            console.log(`Loaded: ${sources.join(', ')}`);
+          }
+        }
+      } else if (data.success && (!data.sites || data.sites.length === 0)) {
+        // API succeeded but no sites found - show helpful message
+        Utils.showAlert(`
+          <strong>No sites found</strong><br>
+          The API returned 0 sites. This could mean:<br>
+          • Your hosting plan has no websites configured<br>
+          • The API doesn't have permission to list websites<br>
+          <br>Check console for raw API response.
+        `, 'warning');
+        sites = [];
       } else {
         Utils.showAlert(`Failed to load sites: ${data.error || 'Unknown error'}`, 'error');
         sites = MOCK_SITES; // Fallback to demo
       }
     } catch (error) {
+      console.error('API Error:', error);
       Utils.showAlert(`API Error: ${error.message}. Showing demo data.`, 'warning');
       sites = MOCK_SITES;
     }
   } else {
     // Demo mode - simulate loading delay
+    console.log('Running in demo mode');
     await new Promise(resolve => setTimeout(resolve, 1500));
     sites = MOCK_SITES;
   }
