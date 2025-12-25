@@ -5,10 +5,8 @@
 
 // API Configuration
 const API_CONFIG = {
-  // Set to your Cloudflare Worker URL when deployed
-  // Leave empty for demo mode
-  workerUrl: '', // e.g., 'https://migration-assistant-api.your-account.workers.dev'
-  demoMode: true // Set to false when worker is deployed
+  workerUrl: 'https://migration-assistant-api.legharifarmsryk.workers.dev',
+  demoMode: false
 };
 
 // Embedded provider configuration

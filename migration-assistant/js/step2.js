@@ -6,8 +6,8 @@
 
 // API Configuration (should match step1.js)
 const API_CONFIG = {
-  workerUrl: '', // Set to your Cloudflare Worker URL
-  demoMode: true
+  workerUrl: 'https://migration-assistant-api.legharifarmsryk.workers.dev',
+  demoMode: false
 };
 
 // Mock site data for demo
