@@ -9,7 +9,7 @@
  * - ALLOWED_ORIGIN: Your frontend domain (e.g., https://toolkit.pillowpotion.com)
  */
 
-const HOSTINGER_API_BASE = 'https://api.hostinger.com';
+const HOSTINGER_API_BASE = 'https://developers.hostinger.com';
 
 // CORS headers
 const corsHeaders = {
@@ -119,8 +119,8 @@ async function handleTestConnection(request, env, origin) {
   }
 
   try {
-    // Test the token by fetching user info
-    const response = await fetch(`${HOSTINGER_API_BASE}/v1/user`, {
+    // Test the token by fetching subscriptions (this endpoint works with any valid token)
+    const response = await fetch(`${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`, {
       headers: {
         'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json'
@@ -136,12 +136,12 @@ async function handleTestConnection(request, env, origin) {
       }, origin, 401);
     }
 
-    const userData = await response.json();
+    const subscriptions = await response.json();
 
     return jsonResponse({
       success: true,
       message: 'Connection successful',
-      user: userData
+      subscriptions: subscriptions
     }, origin);
 
   } catch (error) {
@@ -168,41 +168,46 @@ async function handleConnect(request, env, origin) {
   }
 
   try {
-    // Fetch user info
-    const userResponse = await fetch(`${HOSTINGER_API_BASE}/v1/user`, {
+    // Fetch subscriptions to verify token and get account info
+    const subscriptionsResponse = await fetch(`${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`, {
       headers: {
         'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    if (!userResponse.ok) {
+    if (!subscriptionsResponse.ok) {
       return jsonResponse({
         success: false,
         error: 'Authentication failed'
       }, origin, 401);
     }
 
-    const userData = await userResponse.json();
+    const subscriptions = await subscriptionsResponse.json();
 
-    // Fetch hosting subscriptions
-    const subscriptionsResponse = await fetch(`${HOSTINGER_API_BASE}/v1/hosting/subscriptions`, {
+    // Fetch domains portfolio
+    const domainsResponse = await fetch(`${HOSTINGER_API_BASE}/api/domains/v1/portfolio`, {
       headers: {
         'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    let subscriptions = [];
-    if (subscriptionsResponse.ok) {
-      subscriptions = await subscriptionsResponse.json();
+    let domains = [];
+    if (domainsResponse.ok) {
+      domains = await domainsResponse.json();
     }
 
     return jsonResponse({
       success: true,
       provider: 'Hostinger',
-      user: userData,
-      subscriptions: subscriptions
+      subscriptions: subscriptions,
+      domains: domains,
+      user: {
+        email: 'Hostinger User',
+        subscriptionCount: subscriptions.length || 0,
+        domainCount: domains.length || 0
+      }
     }, origin);
 
   } catch (error) {
@@ -222,16 +227,16 @@ async function handleListSites(request, env, origin) {
   }
 
   const body = await request.json();
-  const { apiToken, subscriptionId } = body;
+  const { apiToken } = body;
 
   if (!apiToken) {
     return jsonResponse({ error: 'API token required' }, origin, 400);
   }
 
   try {
-    // Fetch domains/websites
-    const domainsResponse = await fetch(
-      `${HOSTINGER_API_BASE}/v1/hosting/${subscriptionId || 'default'}/domains`,
+    // Fetch websites from hosting API
+    const websitesResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/hosting/v1/websites`,
       {
         headers: {
           'Authorization': `Bearer ${apiToken}`,
@@ -240,49 +245,85 @@ async function handleListSites(request, env, origin) {
       }
     );
 
-    if (!domainsResponse.ok) {
-      // Try alternative endpoint
-      const websitesResponse = await fetch(
-        `${HOSTINGER_API_BASE}/v1/websites`,
-        {
-          headers: {
-            'Authorization': `Bearer ${apiToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (websitesResponse.ok) {
-        const websites = await websitesResponse.json();
-        return jsonResponse({
-          success: true,
-          sites: websites
-        }, origin);
-      }
-
-      return jsonResponse({
-        success: false,
-        error: 'Failed to fetch domains'
-      }, origin, 400);
+    let websites = [];
+    if (websitesResponse.ok) {
+      websites = await websitesResponse.json();
     }
 
-    const domains = await domainsResponse.json();
-
-    // Enhance with additional info
-    const sitesWithDetails = await Promise.all(
-      domains.map(async (domain) => {
-        // Try to detect CMS and get stats
-        const details = await getSiteDetails(apiToken, domain);
-        return {
-          ...domain,
-          ...details
-        };
-      })
+    // Also fetch domains portfolio
+    const domainsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/domains/v1/portfolio`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
     );
+
+    let domains = [];
+    if (domainsResponse.ok) {
+      domains = await domainsResponse.json();
+    }
+
+    // Combine and format sites
+    const sites = [];
+
+    // Add websites
+    if (Array.isArray(websites)) {
+      websites.forEach((site, index) => {
+        sites.push({
+          id: index + 1,
+          domain: site.domain || site.name || `Website ${index + 1}`,
+          path: site.path || '/public_html',
+          cms: site.cms || 'unknown',
+          cmsVersion: site.cmsVersion || null,
+          hasGit: false,
+          stats: {
+            files: site.files || 0,
+            size: site.size || 0,
+            databases: site.databases || 0,
+            dbSize: site.dbSize || 0,
+            emails: site.emails || 0
+          },
+          lastModified: site.updatedAt || site.createdAt || new Date().toISOString().split('T')[0],
+          source: 'hosting'
+        });
+      });
+    }
+
+    // Add domains not already in websites
+    if (Array.isArray(domains)) {
+      domains.forEach((domain, index) => {
+        const domainName = domain.domain || domain.name || domain;
+        const exists = sites.some(s => s.domain === domainName);
+        if (!exists) {
+          sites.push({
+            id: sites.length + 1,
+            domain: domainName,
+            path: '/public_html',
+            cms: 'unknown',
+            cmsVersion: null,
+            hasGit: false,
+            stats: {
+              files: 0,
+              size: 0,
+              databases: 0,
+              dbSize: 0,
+              emails: 0
+            },
+            lastModified: domain.expiresAt || new Date().toISOString().split('T')[0],
+            source: 'domain'
+          });
+        }
+      });
+    }
 
     return jsonResponse({
       success: true,
-      sites: sitesWithDetails
+      sites: sites,
+      websitesRaw: websites,
+      domainsRaw: domains
     }, origin);
 
   } catch (error) {
