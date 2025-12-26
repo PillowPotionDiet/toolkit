@@ -560,16 +560,9 @@ async function downloadSites(type) {
   // Save selected sites for migration
   Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-  // Check if we already have FTP credentials
-  const provider = Utils.getStorage('migration_provider') || {};
-  if (provider.ftp && provider.ftp.host && provider.ftp.username) {
-    ftpCredentials = provider.ftp;
-    // Start download directly
-    startFtpDownload(selectedSiteData, type);
-  } else {
-    // Show FTP modal to collect credentials
-    showFtpModal();
-  }
+  // Always show FTP modal - password is not stored for security
+  // User must enter password each session
+  showFtpModal();
 }
 
 /**
@@ -807,25 +800,18 @@ function goToNextStep() {
 
   Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-  // Check if we have FTP credentials
-  const provider = Utils.getStorage('migration_provider') || {};
-  if (!provider.ftp || !provider.ftp.host || !provider.ftp.username) {
+  // Check if downloads are already complete
+  const migrationData = Utils.getStorage('migration_data') || {};
+  if (migrationData.downloadCompleted) {
+    // Proceed to step 3
+    Utils.showAlert(`
+      <strong>✅ Ready for Step 3!</strong><br><br>
+      ${selectedSites.size} site(s) selected and downloaded.<br><br>
+      <strong>Step 3:</strong> Connect New Hostinger Account is coming soon.
+    `, 'success');
+  } else {
     // Show FTP modal - required before proceeding
     currentDownloadType = 'all';
     showFtpModal();
-  } else {
-    // Check if downloads are complete
-    const migrationData = Utils.getStorage('migration_data') || {};
-    if (migrationData.downloadCompleted) {
-      // Proceed to step 3
-      Utils.showAlert(`
-        <strong>✅ Ready for Step 3!</strong><br><br>
-        ${selectedSites.size} site(s) selected and downloaded.<br><br>
-        <strong>Step 3:</strong> Connect New Hostinger Account is coming soon.
-      `, 'success');
-    } else {
-      // Start download first
-      startFtpDownload(selectedSiteData, 'all');
-    }
   }
 }

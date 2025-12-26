@@ -20,7 +20,9 @@
       "Bash(wrangler --version:*)",
       "Bash(npm install:*)",
       "Bash(wrangler login:*)",
-      "Bash(wrangler deploy:*)"
+      "Bash(wrangler deploy:*)",
+      "Bash(cat:*)",
+      "Bash(node -c:*)"
     ]
   }
 }
