@@ -775,12 +775,8 @@ function closeDownloadModal() {
  */
 function proceedToNextStep() {
   closeDownloadModal();
-  // Navigate to step 3 when it exists
-  Utils.showAlert(`
-    <strong>✅ Downloads Complete!</strong><br><br>
-    ${downloadStats.files} file(s) downloaded (${Utils.formatBytes(downloadStats.size)})<br><br>
-    <strong>Step 3:</strong> Connect New Hostinger Account is coming soon.
-  `, 'success');
+  // Navigate to step 3
+  window.location.href = 'step3.html';
 }
 
 /**
@@ -804,11 +800,7 @@ function goToNextStep() {
   const migrationData = Utils.getStorage('migration_data') || {};
   if (migrationData.downloadCompleted) {
     // Proceed to step 3
-    Utils.showAlert(`
-      <strong>✅ Ready for Step 3!</strong><br><br>
-      ${selectedSites.size} site(s) selected and downloaded.<br><br>
-      <strong>Step 3:</strong> Connect New Hostinger Account is coming soon.
-    `, 'success');
+    window.location.href = 'step3.html';
   } else {
     // Show FTP modal - required before proceeding
     currentDownloadType = 'all';

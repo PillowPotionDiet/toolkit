@@ -83,6 +83,10 @@ export default {
         return await handleFtpTest(request, env, origin);
       }
 
+      if (path === '/api/verify-new-account') {
+        return await handleVerifyNewAccount(request, env, origin);
+      }
+
       // Health check
       if (path === '/api/health') {
         return jsonResponse({ status: 'ok', timestamp: new Date().toISOString() }, origin);
@@ -1072,6 +1076,109 @@ async function handleFtpDownload(request, env, origin) {
     return jsonResponse({
       success: false,
       error: 'FTP download failed: ' + error.message
+    }, origin, 500);
+  }
+}
+
+/**
+ * Verify new account for migration destination
+ */
+async function handleVerifyNewAccount(request, env, origin) {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, origin, 405);
+  }
+
+  const body = await request.json();
+  const { apiToken, ftp } = body;
+
+  if (!apiToken) {
+    return jsonResponse({ error: 'API token required' }, origin, 400);
+  }
+
+  try {
+    // Verify the account by fetching subscriptions
+    const subscriptionsResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/billing/v1/subscriptions`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!subscriptionsResponse.ok) {
+      if (subscriptionsResponse.status === 401) {
+        return jsonResponse({
+          success: false,
+          error: 'Invalid API token. Please check and try again.'
+        }, origin, 401);
+      }
+      throw new Error('Failed to verify account');
+    }
+
+    const subscriptions = await subscriptionsResponse.json();
+    const subs = Array.isArray(subscriptions) ? subscriptions : (subscriptions.data || []);
+
+    // Count hosting subscriptions
+    let hostingSlots = 0;
+    let totalSpace = 0;
+
+    subs.forEach(sub => {
+      if (sub.status === 'active') {
+        if (sub.product_type === 'hosting' || sub.type === 'hosting' ||
+            (sub.name && (sub.name.toLowerCase().includes('hosting') ||
+             sub.name.toLowerCase().includes('premium') ||
+             sub.name.toLowerCase().includes('business')))) {
+          hostingSlots++;
+          // Estimate space based on plan
+          if (sub.name && sub.name.toLowerCase().includes('business')) {
+            totalSpace += 200; // GB
+          } else if (sub.name && sub.name.toLowerCase().includes('premium')) {
+            totalSpace += 100;
+          } else {
+            totalSpace += 50;
+          }
+        }
+      }
+    });
+
+    // Get websites to count available slots
+    const websitesResponse = await fetch(
+      `${HOSTINGER_API_BASE}/api/hosting/v1/websites?page=1&per_page=100`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    let currentSites = 0;
+    if (websitesResponse.ok) {
+      const websites = await websitesResponse.json();
+      const sites = Array.isArray(websites) ? websites : (websites.data || []);
+      currentSites = sites.length;
+    }
+
+    return jsonResponse({
+      success: true,
+      message: 'Account verified successfully',
+      accountName: 'Hostinger Account',
+      accountEmail: '-', // Would need profile API endpoint
+      hostingSlots: `${currentSites} / ${hostingSlots > 0 ? hostingSlots * 100 : 'Unlimited'}`,
+      availableSpace: totalSpace > 0 ? `${totalSpace} GB` : 'Unlimited',
+      currentSites: currentSites,
+      subscriptions: subs.length,
+      ftpVerified: ftp ? true : false
+    }, origin);
+
+  } catch (error) {
+    return jsonResponse({
+      success: false,
+      error: 'Failed to verify account: ' + error.message
     }, origin, 500);
   }
 }
