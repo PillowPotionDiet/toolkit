@@ -159,6 +159,9 @@ function setupEventListeners() {
   // Next step button
   document.getElementById('nextStepBtn').addEventListener('click', goToNextStep);
 
+  // Proceed button in selection bar
+  document.getElementById('proceedBtn').addEventListener('click', () => downloadSites('all'));
+
   // Download buttons
   document.getElementById('downloadFilesBtn').addEventListener('click', () => downloadSites('files'));
   document.getElementById('downloadDbBtn').addEventListener('click', () => downloadSites('databases'));
@@ -490,6 +493,7 @@ function updateSelectionInfo() {
   // Enable/disable buttons
   const hasSelection = count > 0;
   document.getElementById('nextStepBtn').disabled = !hasSelection;
+  document.getElementById('proceedBtn').disabled = !hasSelection;
   document.getElementById('downloadFilesBtn').disabled = !hasSelection;
   document.getElementById('downloadDbBtn').disabled = !hasSelection;
   document.getElementById('downloadAllBtn').disabled = !hasSelection;
