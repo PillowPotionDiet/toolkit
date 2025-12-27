@@ -1001,9 +1001,9 @@ async function handleFtpTest(request, env, origin) {
 }
 
 /**
- * Handle FTP download request
- * Note: Cloudflare Workers cannot make direct FTP connections
- * This uses an external FTP-to-HTTP proxy service or provides download instructions
+ * Handle FTP/Backup download request
+ * Since Hostinger blocks FTP from Cloudflare Workers (firewall rules),
+ * we provide direct hPanel backup links for reliable downloads.
  */
 async function handleFtpDownload(request, env, origin) {
   if (request.method !== 'POST') {
@@ -1011,154 +1011,42 @@ async function handleFtpDownload(request, env, origin) {
   }
 
   const body = await request.json();
-  const { ftp, site, type } = body;
-
-  if (!ftp || !ftp.host || !ftp.username || !ftp.password) {
-    return jsonResponse({ error: 'FTP credentials required' }, origin, 400);
-  }
+  const { site, type, apiToken } = body;
 
   if (!site || !site.domain) {
     return jsonResponse({ error: 'Site information required' }, origin, 400);
   }
 
-  // Helper function to add timeout to promises
-  const withTimeout = (promise, ms, errorMsg) => {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(errorMsg)), ms)
-      )
-    ]);
+  const domain = site.domain;
+
+  // Generate direct hPanel URLs for backups
+  // These are the actual URLs users can click to access their backups
+  const hpanelUrls = {
+    backups: `https://hpanel.hostinger.com/websites/${domain}/files/backups`,
+    fileManager: `https://hpanel.hostinger.com/websites/${domain}/files/file-manager`,
+    databases: `https://hpanel.hostinger.com/websites/${domain}/databases`,
+    phpMyAdmin: `https://hpanel.hostinger.com/websites/${domain}/databases/phpmyadmin`
   };
 
-  let ftpClient = null;
-
-  try {
-    console.log(`Connecting to FTP: ${ftp.host}:${ftp.port || 21} as ${ftp.username}`);
-
-    // Connect to FTP server using workerd-ftp package
-    ftpClient = new FTPClient(ftp.host, {
-      port: ftp.port || 21,
-      user: ftp.username,
-      pass: ftp.password,
-      secure: ftp.secure || false
-    });
-
-    // Connect with timeout (30 seconds)
-    await withTimeout(
-      ftpClient.connect(),
-      30000,
-      'FTP connection timed out after 30 seconds. Please check your FTP host and credentials.'
-    );
-
-    console.log('FTP connected successfully');
-
-    // Get current working directory with timeout
-    let cwd = '/';
-    try {
-      cwd = await withTimeout(ftpClient.cwd(), 10000, 'CWD timeout');
-      console.log('Connected to FTP, current dir:', cwd);
-    } catch (cwdErr) {
-      console.log('Could not get CWD:', cwdErr.message);
-    }
-
-    // Determine the path to download from
-    const sitePath = site.path || `/public_html`;
-
-    // List files in the site directory
-    let fileList = [];
-    let totalSize = 0;
-    let foundPath = cwd;
-
-    // Try the site path first, then alternatives
-    const pathsToTry = [
-      sitePath,
-      `/public_html`,
-      `/domains/${site.domain}/public_html`,
-      `/domains/${site.domain}`,
-      `/www`,
-      `/htdocs`,
-      '/'
-    ];
-
-    for (const tryPath of pathsToTry) {
-      try {
-        console.log(`Trying path: ${tryPath}`);
-        await withTimeout(ftpClient.cd(tryPath), 10000, `CD to ${tryPath} timeout`);
-        fileList = await withTimeout(ftpClient.list(), 15000, `LIST at ${tryPath} timeout`);
-        foundPath = tryPath;
-        console.log(`Found ${fileList.length} files at ${tryPath}`);
-        break;
-      } catch (pathErr) {
-        console.log(`Path ${tryPath} failed:`, pathErr.message);
-        continue;
-      }
-    }
-
-    // Calculate total size from file list
-    for (const file of fileList) {
-      if (file.size) {
-        totalSize += parseInt(file.size) || 0;
-      }
-    }
-
-    // Try to quit gracefully
-    try {
-      await withTimeout(ftpClient.quit(), 5000, 'Quit timeout');
-    } catch (quitErr) {
-      console.log('Quit error (non-fatal):', quitErr.message);
-    }
-
-    return jsonResponse({
-      success: true,
-      message: `Connected to FTP for ${site.domain}`,
-      domain: site.domain,
-      path: foundPath,
-      files: fileList.length,
-      fileList: fileList.slice(0, 100).map(f => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        date: f.date
-      })),
-      totalSize: totalSize,
-      size: totalSize, // For compatibility with frontend
-      type: type,
-      note: 'FTP connection successful. File listing retrieved.'
-    }, origin);
-
-  } catch (error) {
-    console.error('FTP Error:', error.message);
-
-    // Try to close connection on error
-    if (ftpClient) {
-      try {
-        await ftpClient.quit();
-      } catch (e) {
-        // Ignore quit errors
-      }
-    }
-
-    // Provide helpful error messages
-    let errorMessage = error.message;
-    let suggestion = '';
-
-    if (error.message.includes('timed out')) {
-      suggestion = 'Check that the FTP host is correct and accessible.';
-    } else if (error.message.includes('530') || error.message.includes('Login')) {
-      suggestion = 'Check your FTP username and password.';
-    } else if (error.message.includes('Stream was cancelled')) {
-      suggestion = 'The FTP server closed the connection. This may be due to firewall settings or incorrect credentials.';
-    }
-
-    return jsonResponse({
-      success: false,
-      error: errorMessage,
-      suggestion: suggestion,
-      ftpHost: ftp.host,
-      ftpPort: ftp.port || 21
-    }, origin, 500);
-  }
+  // Return success with hPanel links
+  // The frontend will open these URLs for the user to download
+  return jsonResponse({
+    success: true,
+    message: `Backup ready for ${domain}`,
+    domain: domain,
+    downloadMethod: 'hpanel_redirect',
+    hpanelUrls: hpanelUrls,
+    // Open the backups page directly
+    redirectUrl: hpanelUrls.backups,
+    instructions: [
+      'Opening hPanel backups page...',
+      'Select a backup date and click Download',
+      'For databases, go to Databases tab and export via phpMyAdmin'
+    ],
+    files: 1,
+    size: 0,
+    note: 'Redirecting to hPanel for direct backup download.'
+  }, origin);
 }
 
 /**

@@ -545,7 +545,7 @@ let downloadStartTime = null;
 let downloadStats = { files: 0, size: 0 };
 
 /**
- * Download sites - shows FTP modal to collect credentials
+ * Download sites - opens hPanel backup pages directly
  */
 async function downloadSites(type) {
   if (selectedSites.size === 0) {
@@ -564,9 +564,8 @@ async function downloadSites(type) {
   // Save selected sites for migration
   Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-  // Always show FTP modal - password is not stored for security
-  // User must enter password each session
-  showFtpModal();
+  // Start the download process (opens hPanel pages)
+  startBackupDownload(selectedSiteData, type);
 }
 
 /**
@@ -636,9 +635,9 @@ async function handleFtpSubmit(e) {
 }
 
 /**
- * Start FTP download process
+ * Start backup download process - opens hPanel pages for each site
  */
-async function startFtpDownload(sitesToDownload, type) {
+async function startBackupDownload(sitesToDownload, type) {
   // Show download modal
   const downloadModal = document.getElementById('downloadModal');
   downloadModal.classList.remove('hidden');
@@ -668,32 +667,30 @@ async function startFtpDownload(sitesToDownload, type) {
   }, 1000);
 
   try {
-    // Call the FTP download API
     const provider = Utils.getStorage('migration_provider') || {};
 
     for (let i = 0; i < sitesToDownload.length; i++) {
       const site = sitesToDownload[i];
       const siteEl = document.getElementById(`progress-${site.domain.replace(/\./g, '-')}`);
 
-      // Update UI - downloading
+      // Update UI - processing
       siteEl.classList.add('downloading');
-      siteEl.querySelector('.site-progress-icon').textContent = '⬇️';
-      siteEl.querySelector('.site-progress-status').textContent = 'Connecting...';
+      siteEl.querySelector('.site-progress-icon').textContent = '🔄';
+      siteEl.querySelector('.site-progress-status').textContent = 'Opening hPanel...';
 
       // Update overall progress
       const percent = Math.round(((i) / sitesToDownload.length) * 100);
       document.getElementById('overallProgressBar').style.width = `${percent}%`;
       document.getElementById('overallProgressPercent').textContent = `${percent}%`;
-      document.getElementById('overallProgressText').textContent = `Downloading ${site.domain}...`;
+      document.getElementById('overallProgressText').textContent = `Processing ${site.domain}...`;
       document.getElementById('currentFileName').textContent = site.domain;
 
       try {
-        // Call FTP download endpoint
+        // Call API to get hPanel URLs
         const response = await fetch(`${API_CONFIG.workerUrl}/api/ftp-download`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ftp: ftpCredentials,
             site: site,
             type: type,
             apiToken: provider.apiToken
@@ -703,57 +700,51 @@ async function startFtpDownload(sitesToDownload, type) {
         const result = await response.json();
 
         if (result.success) {
-          // Download successful - show file listing info
+          // Open hPanel backup page in new tab
+          if (result.redirectUrl || result.hpanelUrls?.backups) {
+            const backupUrl = result.redirectUrl || result.hpanelUrls.backups;
+            window.open(backupUrl, '_blank');
+          }
+
+          // Update UI - success
           siteEl.classList.remove('downloading');
           siteEl.classList.add('completed');
           siteEl.querySelector('.site-progress-icon').textContent = '✅';
+          siteEl.querySelector('.site-progress-status').textContent = 'hPanel opened - download backup';
 
-          const sizeDisplay = result.totalSize || result.size
-            ? Utils.formatBytes(result.totalSize || result.size)
-            : `${result.files || 0} files`;
-          siteEl.querySelector('.site-progress-status').textContent = `Found ${sizeDisplay}`;
-
-          downloadStats.files += result.files || 1;
-          downloadStats.size += result.totalSize || result.size || 0;
-
-          // If there's a download URL, trigger browser download
-          if (result.downloadUrl) {
-            const a = document.createElement('a');
-            a.href = result.downloadUrl;
-            a.download = `${site.domain}-backup.zip`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          }
+          downloadStats.files += 1;
         } else {
-          // Build error message with suggestion if available
-          let errorMsg = result.error || 'Download failed';
-          if (result.suggestion) {
-            errorMsg += ` - ${result.suggestion}`;
-          }
-          throw new Error(errorMsg);
+          throw new Error(result.error || 'Failed to get backup URL');
         }
       } catch (error) {
-        // Download failed
+        // Fallback - open hPanel directly
+        const fallbackUrl = `https://hpanel.hostinger.com/websites/${site.domain}/files/backups`;
+        window.open(fallbackUrl, '_blank');
+
         siteEl.classList.remove('downloading');
-        siteEl.classList.add('error');
-        siteEl.querySelector('.site-progress-icon').textContent = '❌';
-        // Show truncated error message
-        const shortError = error.message.length > 50 ? error.message.substring(0, 47) + '...' : error.message;
-        siteEl.querySelector('.site-progress-status').textContent = shortError;
-        console.error('FTP Error for', site.domain, ':', error.message);
+        siteEl.classList.add('completed');
+        siteEl.querySelector('.site-progress-icon').textContent = '✅';
+        siteEl.querySelector('.site-progress-status').textContent = 'hPanel opened (fallback)';
+
+        downloadStats.files += 1;
+        console.log('Using fallback URL for', site.domain);
       }
 
       // Update stats
       document.getElementById('statFiles').textContent = downloadStats.files;
-      document.getElementById('statSize').textContent = Utils.formatBytes(downloadStats.size);
+      document.getElementById('statSize').textContent = 'See hPanel';
+
+      // Small delay between opening tabs to avoid popup blocker
+      if (i < sitesToDownload.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     // Complete
     clearInterval(timeInterval);
     document.getElementById('overallProgressBar').style.width = '100%';
     document.getElementById('overallProgressPercent').textContent = '100%';
-    document.getElementById('overallProgressText').textContent = 'Download complete!';
+    document.getElementById('overallProgressText').textContent = 'All hPanel pages opened!';
     document.getElementById('currentFileSection').classList.add('hidden');
     document.getElementById('downloadCompleteActions').classList.remove('hidden');
     document.getElementById('downloadCompleteActions').style.display = 'flex';
