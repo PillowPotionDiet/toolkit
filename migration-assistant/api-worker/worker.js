@@ -1021,95 +1021,142 @@ async function handleFtpDownload(request, env, origin) {
     return jsonResponse({ error: 'Site information required' }, origin, 400);
   }
 
+  // Helper function to add timeout to promises
+  const withTimeout = (promise, ms, errorMsg) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(errorMsg)), ms)
+      )
+    ]);
+  };
+
+  let ftpClient = null;
+
   try {
+    console.log(`Connecting to FTP: ${ftp.host}:${ftp.port || 21} as ${ftp.username}`);
+
     // Connect to FTP server using workerd-ftp package
-    const ftpClient = new FTPClient(ftp.host, {
+    ftpClient = new FTPClient(ftp.host, {
       port: ftp.port || 21,
       user: ftp.username,
       pass: ftp.password,
       secure: ftp.secure || false
     });
 
-    await ftpClient.connect();
+    // Connect with timeout (30 seconds)
+    await withTimeout(
+      ftpClient.connect(),
+      30000,
+      'FTP connection timed out after 30 seconds. Please check your FTP host and credentials.'
+    );
 
-    // Get current working directory
-    const cwd = await ftpClient.cwd();
-    console.log('Connected to FTP, current dir:', cwd);
+    console.log('FTP connected successfully');
+
+    // Get current working directory with timeout
+    let cwd = '/';
+    try {
+      cwd = await withTimeout(ftpClient.cwd(), 10000, 'CWD timeout');
+      console.log('Connected to FTP, current dir:', cwd);
+    } catch (cwdErr) {
+      console.log('Could not get CWD:', cwdErr.message);
+    }
 
     // Determine the path to download from
-    const sitePath = site.path || `/domains/${site.domain}/public_html`;
+    const sitePath = site.path || `/public_html`;
 
     // List files in the site directory
     let fileList = [];
     let totalSize = 0;
+    let foundPath = cwd;
 
-    try {
-      // Try to change to the site directory and list files
-      await ftpClient.cd(sitePath);
-      fileList = await ftpClient.list();
+    // Try the site path first, then alternatives
+    const pathsToTry = [
+      sitePath,
+      `/public_html`,
+      `/domains/${site.domain}/public_html`,
+      `/domains/${site.domain}`,
+      `/www`,
+      `/htdocs`,
+      '/'
+    ];
 
-      // Calculate total size
-      for (const file of fileList) {
-        if (file.size) {
-          totalSize += file.size;
-        }
-      }
-    } catch (listError) {
-      console.log('Error listing files:', listError.message);
-      // Try alternative paths
-      const altPaths = [
-        `/public_html`,
-        `/domains/${site.domain}`,
-        `/www`,
-        `/htdocs`
-      ];
-
-      for (const altPath of altPaths) {
-        try {
-          await ftpClient.cd(altPath);
-          fileList = await ftpClient.list();
-          console.log(`Found files at ${altPath}`);
-          break;
-        } catch (e) {
-          continue;
-        }
+    for (const tryPath of pathsToTry) {
+      try {
+        console.log(`Trying path: ${tryPath}`);
+        await withTimeout(ftpClient.cd(tryPath), 10000, `CD to ${tryPath} timeout`);
+        fileList = await withTimeout(ftpClient.list(), 15000, `LIST at ${tryPath} timeout`);
+        foundPath = tryPath;
+        console.log(`Found ${fileList.length} files at ${tryPath}`);
+        break;
+      } catch (pathErr) {
+        console.log(`Path ${tryPath} failed:`, pathErr.message);
+        continue;
       }
     }
 
-    // For now, return the file listing info
-    // In a production scenario, we would:
-    // 1. Create a ZIP file of all files
-    // 2. Upload to R2/S3 storage
-    // 3. Return a download URL
+    // Calculate total size from file list
+    for (const file of fileList) {
+      if (file.size) {
+        totalSize += parseInt(file.size) || 0;
+      }
+    }
 
-    await ftpClient.quit();
+    // Try to quit gracefully
+    try {
+      await withTimeout(ftpClient.quit(), 5000, 'Quit timeout');
+    } catch (quitErr) {
+      console.log('Quit error (non-fatal):', quitErr.message);
+    }
 
     return jsonResponse({
       success: true,
       message: `Connected to FTP for ${site.domain}`,
       domain: site.domain,
-      path: sitePath,
+      path: foundPath,
       files: fileList.length,
-      fileList: fileList.slice(0, 50).map(f => ({
+      fileList: fileList.slice(0, 100).map(f => ({
         name: f.name,
         size: f.size,
         type: f.type,
         date: f.date
       })),
       totalSize: totalSize,
+      size: totalSize, // For compatibility with frontend
       type: type,
-      note: 'FTP connection successful. File listing retrieved.',
-      // For actual download, we need R2 storage or stream directly
-      requiresManualDownload: true,
-      hpanelUrl: `https://hpanel.hostinger.com/websites/${site.domain}/files/file-manager`
+      note: 'FTP connection successful. File listing retrieved.'
     }, origin);
 
   } catch (error) {
-    console.error('FTP Error:', error);
+    console.error('FTP Error:', error.message);
+
+    // Try to close connection on error
+    if (ftpClient) {
+      try {
+        await ftpClient.quit();
+      } catch (e) {
+        // Ignore quit errors
+      }
+    }
+
+    // Provide helpful error messages
+    let errorMessage = error.message;
+    let suggestion = '';
+
+    if (error.message.includes('timed out')) {
+      suggestion = 'Check that the FTP host is correct and accessible.';
+    } else if (error.message.includes('530') || error.message.includes('Login')) {
+      suggestion = 'Check your FTP username and password.';
+    } else if (error.message.includes('Stream was cancelled')) {
+      suggestion = 'The FTP server closed the connection. This may be due to firewall settings or incorrect credentials.';
+    }
+
     return jsonResponse({
       success: false,
-      error: 'FTP connection failed: ' + error.message,
-      details: error.stack
+      error: errorMessage,
+      suggestion: suggestion,
+      ftpHost: ftp.host,
+      ftpPort: ftp.port || 21
     }, origin, 500);
   }
 }

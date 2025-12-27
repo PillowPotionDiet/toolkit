@@ -703,14 +703,18 @@ async function startFtpDownload(sitesToDownload, type) {
         const result = await response.json();
 
         if (result.success) {
-          // Download successful
+          // Download successful - show file listing info
           siteEl.classList.remove('downloading');
           siteEl.classList.add('completed');
           siteEl.querySelector('.site-progress-icon').textContent = '✅';
-          siteEl.querySelector('.site-progress-status').textContent = `Downloaded ${Utils.formatBytes(result.size || 0)}`;
+
+          const sizeDisplay = result.totalSize || result.size
+            ? Utils.formatBytes(result.totalSize || result.size)
+            : `${result.files || 0} files`;
+          siteEl.querySelector('.site-progress-status').textContent = `Found ${sizeDisplay}`;
 
           downloadStats.files += result.files || 1;
-          downloadStats.size += result.size || 0;
+          downloadStats.size += result.totalSize || result.size || 0;
 
           // If there's a download URL, trigger browser download
           if (result.downloadUrl) {
@@ -722,14 +726,22 @@ async function startFtpDownload(sitesToDownload, type) {
             document.body.removeChild(a);
           }
         } else {
-          throw new Error(result.error || 'Download failed');
+          // Build error message with suggestion if available
+          let errorMsg = result.error || 'Download failed';
+          if (result.suggestion) {
+            errorMsg += ` - ${result.suggestion}`;
+          }
+          throw new Error(errorMsg);
         }
       } catch (error) {
         // Download failed
         siteEl.classList.remove('downloading');
         siteEl.classList.add('error');
         siteEl.querySelector('.site-progress-icon').textContent = '❌';
-        siteEl.querySelector('.site-progress-status').textContent = error.message;
+        // Show truncated error message
+        const shortError = error.message.length > 50 ? error.message.substring(0, 47) + '...' : error.message;
+        siteEl.querySelector('.site-progress-status').textContent = shortError;
+        console.error('FTP Error for', site.domain, ':', error.message);
       }
 
       // Update stats
