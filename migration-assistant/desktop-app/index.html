@@ -672,12 +672,16 @@
         <!-- Sites will be populated here -->
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Download Location</label>
+      <div class="form-group" style="margin-top: 20px;">
+        <label class="form-label" style="font-weight: 600;">📂 Download Location (Required)</label>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+          Select an <strong>empty folder</strong> where site files will be saved. Each site gets its own subfolder.
+        </p>
         <div class="folder-select">
-          <div class="folder-path" id="outputPath">Select a folder...</div>
+          <div class="folder-path" id="outputPath" style="color: var(--warning);">⚠️ No folder selected - click Browse</div>
           <button class="btn btn-secondary" onclick="selectOutputFolder()">📂 Browse</button>
         </div>
+        <div id="folderStatus" style="margin-top: 8px; font-size: 12px;"></div>
       </div>
 
       <div class="actions">
@@ -758,7 +762,8 @@
     let ftpConfig = {};
     let siteFolders = [];
     let selectedSites = new Set();
-    let outputDir = path.join(os.homedir(), 'Desktop', 'migration-backups');
+    let outputDir = null;  // Must be selected by user
+    let folderIsValid = false;  // Track if selected folder is valid (empty)
     let systemCheckPassed = false;
 
     // Run system check on startup
@@ -996,8 +1001,13 @@
         </div>
       `).join('');
 
-      document.getElementById('outputPath').textContent = outputDir;
+      // Don't auto-populate path - keep the warning message if no folder selected
+      if (!outputDir) {
+        document.getElementById('outputPath').innerHTML = '⚠️ No folder selected - click Browse';
+        document.getElementById('outputPath').style.color = 'var(--warning)';
+      }
       showStatus('sitesStatus', 'info', `Found ${siteFolders.length} site folders`);
+      updateDownloadButton();
     }
 
     // Toggle site selection
@@ -1024,20 +1034,77 @@
     }
 
     function updateDownloadButton() {
-      document.getElementById('startDownloadBtn').disabled = selectedSites.size === 0;
+      // Require both sites selected AND valid folder
+      const sitesSelected = selectedSites.size > 0;
+      const folderReady = outputDir && folderIsValid;
+      document.getElementById('startDownloadBtn').disabled = !sitesSelected || !folderReady;
     }
 
     // Select output folder
     async function selectOutputFolder() {
       const dir = await ipcRenderer.invoke('select-directory');
       if (dir) {
+        // Check if folder is empty or nearly empty
+        const validation = validateFolder(dir);
+
         outputDir = dir;
-        document.getElementById('outputPath').textContent = dir;
+        const pathEl = document.getElementById('outputPath');
+        const statusEl = document.getElementById('folderStatus');
+
+        if (validation.valid) {
+          folderIsValid = true;
+          pathEl.textContent = dir;
+          pathEl.style.color = 'var(--success)';
+          statusEl.innerHTML = `<span style="color: var(--success);">✓ ${validation.message}</span>`;
+        } else if (validation.warning) {
+          // Folder has some files but user can proceed
+          folderIsValid = true;
+          pathEl.textContent = dir;
+          pathEl.style.color = 'var(--warning)';
+          statusEl.innerHTML = `<span style="color: var(--warning);">⚠️ ${validation.message}</span>`;
+        } else {
+          folderIsValid = false;
+          pathEl.textContent = dir;
+          pathEl.style.color = 'var(--error)';
+          statusEl.innerHTML = `<span style="color: var(--error);">✗ ${validation.message}</span>`;
+        }
+
+        updateDownloadButton();
+      }
+    }
+
+    // Validate folder - check if empty or acceptable
+    function validateFolder(dir) {
+      try {
+        const contents = fs.readdirSync(dir);
+
+        // Filter out hidden files and system files
+        const visibleFiles = contents.filter(f => !f.startsWith('.') && f !== 'desktop.ini' && f !== 'Thumbs.db');
+
+        if (visibleFiles.length === 0) {
+          return { valid: true, message: 'Folder is empty - perfect!' };
+        } else if (visibleFiles.length <= 3) {
+          return { valid: false, warning: true, message: `Folder has ${visibleFiles.length} file(s). Downloads will be added here.` };
+        } else {
+          return { valid: false, warning: true, message: `Folder has ${visibleFiles.length} files. Consider using an empty folder.` };
+        }
+      } catch (e) {
+        return { valid: false, message: 'Cannot access folder: ' + e.message };
       }
     }
 
     // Start download
     async function startDownload() {
+      // Final validation before starting
+      if (!outputDir || !folderIsValid) {
+        showStatus('sitesStatus', 'error', 'Please select a valid download folder first');
+        return;
+      }
+      if (selectedSites.size === 0) {
+        showStatus('sitesStatus', 'error', 'Please select at least one site to download');
+        return;
+      }
+
       goToStep(3);
 
       const sites = Array.from(selectedSites).map(i => siteFolders[i]);
@@ -1118,6 +1185,8 @@
     // Reset app
     function resetApp() {
       selectedSites.clear();
+      outputDir = null;
+      folderIsValid = false;
       goToStep(1);
       document.getElementById('connectBtn').innerHTML = '<span>🔌</span> Connect to FTP';
       document.getElementById('connectBtn').disabled = false;
@@ -1126,6 +1195,10 @@
       document.getElementById('progressFill').style.width = '0%';
       document.getElementById('downloadActions').classList.remove('hidden');
       document.getElementById('completeActions').classList.add('hidden');
+      // Reset folder selection UI
+      document.getElementById('outputPath').innerHTML = '⚠️ No folder selected - click Browse';
+      document.getElementById('outputPath').style.color = 'var(--warning)';
+      document.getElementById('folderStatus').innerHTML = '';
     }
 
     // Go to step
