@@ -9,6 +9,8 @@
  * - ALLOWED_ORIGIN: Your frontend domain (e.g., https://toolkit.pillowpotion.com)
  */
 
+import { FTPClient } from 'workerd-ftp';
+
 const HOSTINGER_API_BASE = 'https://developers.hostinger.com';
 
 // CORS headers
@@ -1020,62 +1022,94 @@ async function handleFtpDownload(request, env, origin) {
   }
 
   try {
-    // Option 1: Use an FTP proxy service (if available in env)
-    if (env.FTP_PROXY_URL) {
-      const proxyResponse = await fetch(env.FTP_PROXY_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${env.FTP_PROXY_KEY || ''}`
-        },
-        body: JSON.stringify({
-          ftp: ftp,
-          path: site.path || `/domains/${site.domain}/public_html`,
-          type: type
-        })
-      });
+    // Connect to FTP server using workerd-ftp package
+    const ftpClient = new FTPClient(ftp.host, {
+      port: ftp.port || 21,
+      user: ftp.username,
+      pass: ftp.password,
+      secure: ftp.secure || false
+    });
 
-      if (proxyResponse.ok) {
-        const proxyData = await proxyResponse.json();
-        return jsonResponse({
-          success: true,
-          downloadUrl: proxyData.downloadUrl,
-          size: proxyData.size,
-          files: proxyData.files
-        }, origin);
+    await ftpClient.connect();
+
+    // Get current working directory
+    const cwd = await ftpClient.cwd();
+    console.log('Connected to FTP, current dir:', cwd);
+
+    // Determine the path to download from
+    const sitePath = site.path || `/domains/${site.domain}/public_html`;
+
+    // List files in the site directory
+    let fileList = [];
+    let totalSize = 0;
+
+    try {
+      // Try to change to the site directory and list files
+      await ftpClient.cd(sitePath);
+      fileList = await ftpClient.list();
+
+      // Calculate total size
+      for (const file of fileList) {
+        if (file.size) {
+          totalSize += file.size;
+        }
+      }
+    } catch (listError) {
+      console.log('Error listing files:', listError.message);
+      // Try alternative paths
+      const altPaths = [
+        `/public_html`,
+        `/domains/${site.domain}`,
+        `/www`,
+        `/htdocs`
+      ];
+
+      for (const altPath of altPaths) {
+        try {
+          await ftpClient.cd(altPath);
+          fileList = await ftpClient.list();
+          console.log(`Found files at ${altPath}`);
+          break;
+        } catch (e) {
+          continue;
+        }
       }
     }
 
-    // Option 2: Generate backup via Hostinger API (if available)
-    // Hostinger doesn't have backup generation API for shared hosting
+    // For now, return the file listing info
+    // In a production scenario, we would:
+    // 1. Create a ZIP file of all files
+    // 2. Upload to R2/S3 storage
+    // 3. Return a download URL
 
-    // Option 3: Return success with simulated data for demo
-    // In production, this would connect to an actual FTP proxy service
-
-    // Simulate download process
-    const simulatedSize = Math.floor(Math.random() * 50000000) + 1000000; // 1-50 MB
-    const simulatedFiles = Math.floor(Math.random() * 500) + 50; // 50-500 files
+    await ftpClient.quit();
 
     return jsonResponse({
       success: true,
-      message: `Site ${site.domain} backup prepared`,
+      message: `Connected to FTP for ${site.domain}`,
       domain: site.domain,
-      size: simulatedSize,
-      files: simulatedFiles,
+      path: sitePath,
+      files: fileList.length,
+      fileList: fileList.slice(0, 50).map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        date: f.date
+      })),
+      totalSize: totalSize,
       type: type,
-      // In production, this would be a real download URL
-      note: 'FTP download simulation. In production, connect to an FTP proxy service.',
-      instructions: [
-        'For production use, set up an FTP proxy service.',
-        'The proxy would handle FTP connections and return ZIP files.',
-        'Recommended: Use a Node.js server with basic-ftp package.'
-      ]
+      note: 'FTP connection successful. File listing retrieved.',
+      // For actual download, we need R2 storage or stream directly
+      requiresManualDownload: true,
+      hpanelUrl: `https://hpanel.hostinger.com/websites/${site.domain}/files/file-manager`
     }, origin);
 
   } catch (error) {
+    console.error('FTP Error:', error);
     return jsonResponse({
       success: false,
-      error: 'FTP download failed: ' + error.message
+      error: 'FTP connection failed: ' + error.message,
+      details: error.stack
     }, origin, 500);
   }
 }

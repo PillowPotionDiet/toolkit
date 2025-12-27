@@ -5,6 +5,9 @@ name = "migration-assistant-api"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# Enable TCP sockets and Node.js compatibility for FTP connections
+compatibility_flags = ["nodejs_compat"]
+
 # Environment variables (set these in Cloudflare dashboard for production)
 # [vars]
 # ALLOWED_ORIGIN = "https://toolkit.pillowpotion.com"

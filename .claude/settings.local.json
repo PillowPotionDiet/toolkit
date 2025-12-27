@@ -22,7 +22,10 @@
       "Bash(wrangler login:*)",
       "Bash(wrangler deploy:*)",
       "Bash(cat:*)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Bash(curl -X POST \"https://migration-assistant-api.legharifarmsryk.workers.dev/api/ftp-download\" -H \"Content-Type: application/json\" -d '{\"\"ftp\"\":{\"\"host\"\":\"\"test\"\",\"\"username\"\":\"\"test\"\",\"\"password\"\":\"\"test\"\"},\"\"site\"\":{\"\"domain\"\":\"\"test.com\"\"},\"\"type\"\":\"\"all\"\"}')",
+      "Bash(curl:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
