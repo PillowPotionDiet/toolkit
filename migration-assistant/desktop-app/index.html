@@ -426,6 +426,57 @@
       display: none !important;
     }
 
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    /* System Check Items */
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-input);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .check-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .check-icon.loading {
+      animation: spin 1s linear infinite;
+    }
+    .check-info {
+      flex: 1;
+    }
+    .check-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .check-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .check-item.success .check-icon { color: var(--success); }
+    .check-item.error .check-icon { color: var(--error); }
+    .check-item.warning .check-icon { color: var(--warning); }
+
     /* Spinner */
     .spinner {
       width: 20px;
@@ -516,6 +567,28 @@
       <button class="window-btn btn-minimize" onclick="minimizeWindow()"></button>
       <button class="window-btn btn-maximize" onclick="maximizeWindow()"></button>
       <button class="window-btn btn-close" onclick="closeWindow()"></button>
+    </div>
+  </div>
+
+  <!-- System Check Modal -->
+  <div class="modal-overlay hidden" id="systemCheckModal">
+    <div class="card" style="max-width: 500px; margin: auto;">
+      <div class="card-title" style="padding: 20px 24px 0;">
+        <span>🔍</span> System Check
+      </div>
+      <div style="padding: 24px;">
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+          Checking system requirements...
+        </p>
+        <div id="systemCheckList">
+          <!-- Will be populated by JS -->
+        </div>
+        <div id="systemCheckActions" class="hidden" style="margin-top: 20px;">
+          <button class="btn btn-primary btn-block" onclick="closeSystemCheck()">
+            Continue
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -679,12 +752,183 @@
     const { ipcRenderer } = require('electron');
     const path = require('path');
     const os = require('os');
+    const fs = require('fs');
 
     // State
     let ftpConfig = {};
     let siteFolders = [];
     let selectedSites = new Set();
     let outputDir = path.join(os.homedir(), 'Desktop', 'migration-backups');
+    let systemCheckPassed = false;
+
+    // Run system check on startup
+    document.addEventListener('DOMContentLoaded', runSystemCheck);
+
+    async function runSystemCheck() {
+      const modal = document.getElementById('systemCheckModal');
+      const list = document.getElementById('systemCheckList');
+      const actions = document.getElementById('systemCheckActions');
+
+      modal.classList.remove('hidden');
+
+      const checks = [
+        { id: 'os', name: 'Operating System', check: checkOS },
+        { id: 'disk', name: 'Disk Space', check: checkDiskSpace },
+        { id: 'network', name: 'Network Connection', check: checkNetwork },
+        { id: 'permissions', name: 'Write Permissions', check: checkWritePermissions }
+      ];
+
+      // Initialize check list
+      list.innerHTML = checks.map(c => `
+        <div class="check-item" id="check-${c.id}">
+          <div class="check-icon loading">⏳</div>
+          <div class="check-info">
+            <div class="check-name">${c.name}</div>
+            <div class="check-status">Checking...</div>
+          </div>
+        </div>
+      `).join('');
+
+      let allPassed = true;
+
+      // Run each check
+      for (const check of checks) {
+        const el = document.getElementById(`check-${check.id}`);
+        const iconEl = el.querySelector('.check-icon');
+        const statusEl = el.querySelector('.check-status');
+
+        try {
+          const result = await check.check();
+
+          iconEl.classList.remove('loading');
+
+          if (result.success) {
+            el.classList.add('success');
+            iconEl.textContent = '✓';
+            statusEl.textContent = result.message;
+          } else if (result.warning) {
+            el.classList.add('warning');
+            iconEl.textContent = '⚠';
+            statusEl.textContent = result.message;
+          } else {
+            el.classList.add('error');
+            iconEl.textContent = '✗';
+            statusEl.textContent = result.message;
+            allPassed = false;
+          }
+        } catch (e) {
+          iconEl.classList.remove('loading');
+          el.classList.add('error');
+          iconEl.textContent = '✗';
+          statusEl.textContent = 'Check failed: ' + e.message;
+          allPassed = false;
+        }
+
+        // Small delay between checks for visual effect
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      systemCheckPassed = allPassed;
+      actions.classList.remove('hidden');
+
+      if (!allPassed) {
+        actions.innerHTML = `
+          <p style="color: var(--warning); margin-bottom: 12px; font-size: 13px;">
+            Some checks failed but you can still try to continue.
+          </p>
+          <button class="btn btn-primary btn-block" onclick="closeSystemCheck()">
+            Continue Anyway
+          </button>
+        `;
+      }
+    }
+
+    function checkOS() {
+      const platform = os.platform();
+      const release = os.release();
+      const arch = os.arch();
+
+      return {
+        success: true,
+        message: `${platform === 'win32' ? 'Windows' : platform} ${release} (${arch})`
+      };
+    }
+
+    function checkDiskSpace() {
+      try {
+        // Check available space on system drive
+        const homeDir = os.homedir();
+        const stats = fs.statfsSync ? fs.statfsSync(homeDir) : null;
+
+        if (stats) {
+          const freeGB = (stats.bfree * stats.bsize) / (1024 * 1024 * 1024);
+          if (freeGB < 1) {
+            return { success: false, message: `Only ${freeGB.toFixed(1)} GB free - need at least 1 GB` };
+          }
+          return { success: true, message: `${freeGB.toFixed(1)} GB available` };
+        }
+
+        // Fallback if statfsSync not available
+        return { success: true, warning: true, message: 'Could not check disk space' };
+      } catch (e) {
+        return { success: true, warning: true, message: 'Disk space check skipped' };
+      }
+    }
+
+    async function checkNetwork() {
+      try {
+        // Try to connect to a known host
+        const net = require('net');
+
+        return new Promise((resolve) => {
+          const socket = new net.Socket();
+          socket.setTimeout(5000);
+
+          socket.on('connect', () => {
+            socket.destroy();
+            resolve({ success: true, message: 'Connected to internet' });
+          });
+
+          socket.on('timeout', () => {
+            socket.destroy();
+            resolve({ success: false, message: 'Connection timeout' });
+          });
+
+          socket.on('error', (err) => {
+            socket.destroy();
+            resolve({ success: false, message: 'No internet connection' });
+          });
+
+          // Try to connect to Google DNS
+          socket.connect(53, '8.8.8.8');
+        });
+      } catch (e) {
+        return { success: true, warning: true, message: 'Network check skipped' };
+      }
+    }
+
+    function checkWritePermissions() {
+      try {
+        const testDir = path.join(os.homedir(), 'Desktop', '.migration-test');
+        const testFile = path.join(testDir, 'test.txt');
+
+        // Try to create directory and file
+        if (!fs.existsSync(testDir)) {
+          fs.mkdirSync(testDir, { recursive: true });
+        }
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+        fs.rmdirSync(testDir);
+
+        return { success: true, message: 'Can write to Desktop' };
+      } catch (e) {
+        return { success: false, message: 'Cannot write to Desktop folder' };
+      }
+    }
+
+    function closeSystemCheck() {
+      document.getElementById('systemCheckModal').classList.add('hidden');
+    }
 
     // Window Controls
     function minimizeWindow() { ipcRenderer.send('minimize-window'); }
@@ -932,6 +1176,34 @@
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
+
+    // Handle deep link data from web app
+    ipcRenderer.on('deep-link-data', (event, params) => {
+      console.log('Received deep link data:', params);
+
+      // Pre-fill FTP credentials if provided
+      if (params.host) {
+        document.getElementById('ftpHost').value = params.host;
+      }
+      if (params.user) {
+        document.getElementById('ftpUser').value = params.user;
+      }
+      if (params.port) {
+        document.getElementById('ftpPort').value = params.port;
+      }
+
+      // Store sites to auto-select later
+      if (params.sites) {
+        try {
+          window.autoSelectSites = JSON.parse(decodeURIComponent(params.sites));
+        } catch (e) {
+          console.error('Failed to parse sites:', e);
+        }
+      }
+
+      // Show notification
+      showStatus('connectionStatus', 'info', 'Data received from web app! Enter your FTP password to continue.');
+    });
   </script>
 </body>
 </html>

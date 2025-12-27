@@ -5,6 +5,52 @@ const fs = require('fs');
 
 let mainWindow;
 
+// Register custom protocol for deep linking
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('migration-assistant', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('migration-assistant');
+}
+
+// Handle deep link on Windows
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, focus our window
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+    // Handle the protocol URL
+    const url = commandLine.find(arg => arg.startsWith('migration-assistant://'));
+    if (url) {
+      handleDeepLink(url);
+    }
+  });
+}
+
+// Handle deep link URL
+function handleDeepLink(url) {
+  if (!mainWindow) return;
+
+  // Parse URL parameters
+  // Format: migration-assistant://start?host=xxx&user=xxx&sites=xxx
+  try {
+    const urlObj = new URL(url);
+    const params = Object.fromEntries(urlObj.searchParams);
+
+    // Send to renderer
+    mainWindow.webContents.send('deep-link-data', params);
+  } catch (e) {
+    console.error('Failed to parse deep link:', e);
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1000,
@@ -21,6 +67,16 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+
+  // Handle deep link on app start (Windows)
+  if (process.platform === 'win32') {
+    const url = process.argv.find(arg => arg.startsWith('migration-assistant://'));
+    if (url) {
+      mainWindow.webContents.on('did-finish-load', () => {
+        handleDeepLink(url);
+      });
+    }
+  }
 }
 
 app.whenReady().then(createWindow);

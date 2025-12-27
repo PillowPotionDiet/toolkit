@@ -462,11 +462,16 @@
         <div style="padding: 1.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); margin-bottom: 1rem; color: white;">
           <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Option A: Desktop App (Recommended)</h3>
           <p style="margin: 0 0 1rem 0; opacity: 0.9; font-size: 0.9rem;">
-            Download our desktop app for the best experience - beautiful UI, auto-detect sites, progress tracking.
+            Launch the desktop app to download your files. It will auto-detect your site folders.
           </p>
-          <a href="desktop-app/" class="btn" style="background: white; color: #667eea; font-weight: 600; text-decoration: none; display: inline-block;">
-            💻 Get Desktop App
-          </a>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn" onclick="launchDesktopApp()" style="background: white; color: #667eea; font-weight: 600;">
+              🚀 Launch Desktop App
+            </button>
+            <a href="desktop-app/releases/MigrationAssistant-Portable.exe" class="btn" style="background: rgba(255,255,255,0.2); color: white; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center;" download>
+              ⬇️ Download App
+            </a>
+          </div>
         </div>
 
         <!-- Option B: PowerShell Script -->

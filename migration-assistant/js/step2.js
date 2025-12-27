@@ -819,6 +819,71 @@ function closeChecklistModal() {
 }
 
 /**
+ * Launch desktop app with deep link
+ */
+function launchDesktopApp() {
+  // Get FTP info if available
+  const provider = Utils.getStorage('migration_provider') || {};
+  const selectedSiteData = Utils.getStorage('migration_selected_sites') || [];
+
+  // Build deep link URL
+  let deepLinkUrl = 'migration-assistant://start';
+  const params = new URLSearchParams();
+
+  // Add FTP credentials if available
+  if (provider.ftp?.host) {
+    params.set('host', provider.ftp.host);
+  }
+  if (provider.ftp?.username) {
+    params.set('user', provider.ftp.username);
+  }
+  if (provider.ftp?.port) {
+    params.set('port', provider.ftp.port);
+  }
+
+  // Add selected sites
+  if (selectedSiteData.length > 0) {
+    const siteDomains = selectedSiteData.map(s => s.domain);
+    params.set('sites', encodeURIComponent(JSON.stringify(siteDomains)));
+  }
+
+  const paramString = params.toString();
+  if (paramString) {
+    deepLinkUrl += '?' + paramString;
+  }
+
+  // Try to launch the desktop app
+  console.log('Launching desktop app:', deepLinkUrl);
+
+  // Create hidden iframe to try the protocol
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = deepLinkUrl;
+  document.body.appendChild(iframe);
+
+  // Show instructions after a delay
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+
+    // Show a modal with instructions if app didn't open
+    const confirmed = confirm(
+      'Desktop app launch attempted!\n\n' +
+      'If the app opened, you can close this dialog.\n\n' +
+      'If not, please:\n' +
+      '1. Download the portable app\n' +
+      '2. Run the .exe file (no installation needed)\n' +
+      '3. Enter your FTP credentials\n\n' +
+      'Click OK to download the app, or Cancel if it already opened.'
+    );
+
+    if (confirmed) {
+      // Download the portable app
+      window.location.href = 'desktop-app/releases/MigrationAssistant-Portable.exe';
+    }
+  }, 2000);
+}
+
+/**
  * Close download modal (legacy - now uses checklist)
  */
 function closeDownloadModal() {

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "build:win": "electron-builder --win",
+    "build:win": "electron-builder --win portable",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
@@ -21,13 +21,22 @@
   },
   "build": {
     "appId": "com.migration.assistant",
-    "productName": "Migration Assistant",
+    "productName": "MigrationAssistant",
     "directories": {
-      "output": "dist"
+      "output": "releases"
     },
     "win": {
-      "target": "portable",
-      "icon": "icon.ico"
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.ico",
+      "artifactName": "${productName}-Portable.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable.${ext}"
     },
     "mac": {
       "target": "dmg",
@@ -35,6 +44,10 @@
     },
     "linux": {
       "target": "AppImage"
+    },
+    "protocols": {
+      "name": "Migration Assistant",
+      "schemes": ["migration-assistant"]
     }
   }
 }
