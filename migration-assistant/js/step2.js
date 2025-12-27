@@ -545,7 +545,7 @@ let downloadStartTime = null;
 let downloadStats = { files: 0, size: 0 };
 
 /**
- * Download sites - opens hPanel backup pages directly
+ * Download sites - shows checklist modal for download options
  */
 async function downloadSites(type) {
   if (selectedSites.size === 0) {
@@ -558,14 +558,14 @@ async function downloadSites(type) {
   // Get selected site data
   const selectedSiteData = Array.from(selectedSites).map(id => {
     const site = sites.find(s => s.id === id);
-    return site ? { id: site.id, domain: site.domain, path: site.path, cms: site.cms } : null;
+    return site ? { id: site.id, domain: site.domain, path: site.path, cms: site.cms, stats: site.stats } : null;
   }).filter(Boolean);
 
   // Save selected sites for migration
   Utils.setStorage('migration_selected_sites', selectedSiteData);
 
-  // Start the download process (opens hPanel pages)
-  startBackupDownload(selectedSiteData, type);
+  // Show checklist modal
+  showDownloadChecklist(selectedSiteData, type);
 }
 
 /**
@@ -634,147 +634,195 @@ async function handleFtpSubmit(e) {
   startFtpDownload(selectedSiteData, currentDownloadType);
 }
 
+// Checklist state
+let checklistState = {};
+
 /**
- * Start backup download process - opens hPanel pages for each site
+ * Show download checklist modal
  */
-async function startBackupDownload(sitesToDownload, type) {
-  // Show download modal
-  const downloadModal = document.getElementById('downloadModal');
-  downloadModal.classList.remove('hidden');
+function showDownloadChecklist(sitesToDownload, type) {
+  // Load saved checklist state
+  checklistState = Utils.getStorage('migration_checklist') || {};
 
-  // Reset stats
-  downloadStartTime = Date.now();
-  downloadStats = { files: 0, size: 0 };
+  // Build checklist HTML
+  const container = document.getElementById('sitesChecklistContainer');
+  container.innerHTML = sitesToDownload.map(site => {
+    const domainKey = site.domain.replace(/\./g, '-');
+    const siteState = checklistState[site.domain] || {};
+    const hasDb = site.stats?.databases > 0;
+    const hasEmails = site.stats?.emails > 0;
 
-  // Initialize progress list
-  const progressList = document.getElementById('sitesProgressList');
-  progressList.innerHTML = sitesToDownload.map(site => `
-    <div class="site-progress-item" id="progress-${site.domain.replace(/\./g, '-')}">
-      <div class="site-progress-icon">⏳</div>
-      <div class="site-progress-info">
-        <div class="site-progress-name">${site.domain}</div>
-        <div class="site-progress-status">Waiting...</div>
+    // Count completed items
+    let totalItems = 1; // Files always
+    if (hasDb) totalItems++;
+    if (hasEmails) totalItems++;
+
+    let completedItems = 0;
+    if (siteState.files) completedItems++;
+    if (hasDb && siteState.database) completedItems++;
+    if (hasEmails && siteState.emails) completedItems++;
+
+    const isComplete = completedItems === totalItems;
+
+    return `
+      <div class="checklist-site" data-domain="${site.domain}">
+        <div class="checklist-site-header">
+          <span style="font-size: 1.25rem;">🌐</span>
+          <span class="checklist-site-domain">${site.domain}</span>
+          <span class="checklist-site-status ${isComplete ? 'complete' : ''}">${completedItems}/${totalItems}</span>
+        </div>
+        <div class="checklist-site-items">
+          <!-- Files Backup -->
+          <div class="checklist-item ${siteState.files ? 'completed' : ''}" data-item="files">
+            <input type="checkbox" id="check-${domainKey}-files" ${siteState.files ? 'checked' : ''}
+                   onchange="updateChecklistItem('${site.domain}', 'files', this.checked)">
+            <div class="checklist-item-info">
+              <div class="checklist-item-label">📁 Website Files Backup</div>
+              <div class="checklist-item-desc">Download ZIP from hPanel backups</div>
+            </div>
+            <a href="https://hpanel.hostinger.com/websites/${site.domain}/files/backups"
+               target="_blank" class="checklist-item-link" onclick="markAsOpened('${site.domain}', 'files')">
+              Open hPanel →
+            </a>
+          </div>
+
+          ${hasDb ? `
+          <!-- Database Export -->
+          <div class="checklist-item ${siteState.database ? 'completed' : ''}" data-item="database">
+            <input type="checkbox" id="check-${domainKey}-database" ${siteState.database ? 'checked' : ''}
+                   onchange="updateChecklistItem('${site.domain}', 'database', this.checked)">
+            <div class="checklist-item-info">
+              <div class="checklist-item-label">🗄️ Database Export</div>
+              <div class="checklist-item-desc">Export SQL from phpMyAdmin</div>
+            </div>
+            <a href="https://hpanel.hostinger.com/websites/${site.domain}/databases"
+               target="_blank" class="checklist-item-link" onclick="markAsOpened('${site.domain}', 'database')">
+              Open Databases →
+            </a>
+          </div>
+          ` : ''}
+
+          ${hasEmails ? `
+          <!-- Email Accounts -->
+          <div class="checklist-item ${siteState.emails ? 'completed' : ''}" data-item="emails">
+            <input type="checkbox" id="check-${domainKey}-emails" ${siteState.emails ? 'checked' : ''}
+                   onchange="updateChecklistItem('${site.domain}', 'emails', this.checked)">
+            <div class="checklist-item-info">
+              <div class="checklist-item-label">📧 Email Accounts (${site.stats.emails})</div>
+              <div class="checklist-item-desc">Note email addresses for recreation</div>
+            </div>
+            <a href="https://hpanel.hostinger.com/websites/${site.domain}/emails"
+               target="_blank" class="checklist-item-link" onclick="markAsOpened('${site.domain}', 'emails')">
+              View Emails →
+            </a>
+          </div>
+          ` : ''}
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
-  // Start elapsed time counter
-  const timeInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - downloadStartTime) / 1000);
-    const mins = Math.floor(elapsed / 60);
-    const secs = elapsed % 60;
-    document.getElementById('statTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-  }, 1000);
+  // Update progress
+  updateChecklistProgress(sitesToDownload);
 
-  try {
-    const provider = Utils.getStorage('migration_provider') || {};
-
-    for (let i = 0; i < sitesToDownload.length; i++) {
-      const site = sitesToDownload[i];
-      const siteEl = document.getElementById(`progress-${site.domain.replace(/\./g, '-')}`);
-
-      // Update UI - processing
-      siteEl.classList.add('downloading');
-      siteEl.querySelector('.site-progress-icon').textContent = '🔄';
-      siteEl.querySelector('.site-progress-status').textContent = 'Opening hPanel...';
-
-      // Update overall progress
-      const percent = Math.round(((i) / sitesToDownload.length) * 100);
-      document.getElementById('overallProgressBar').style.width = `${percent}%`;
-      document.getElementById('overallProgressPercent').textContent = `${percent}%`;
-      document.getElementById('overallProgressText').textContent = `Processing ${site.domain}...`;
-      document.getElementById('currentFileName').textContent = site.domain;
-
-      try {
-        // Call API to get hPanel URLs
-        const response = await fetch(`${API_CONFIG.workerUrl}/api/ftp-download`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            site: site,
-            type: type,
-            apiToken: provider.apiToken
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          // Open hPanel backup page in new tab
-          if (result.redirectUrl || result.hpanelUrls?.backups) {
-            const backupUrl = result.redirectUrl || result.hpanelUrls.backups;
-            window.open(backupUrl, '_blank');
-          }
-
-          // Update UI - success
-          siteEl.classList.remove('downloading');
-          siteEl.classList.add('completed');
-          siteEl.querySelector('.site-progress-icon').textContent = '✅';
-          siteEl.querySelector('.site-progress-status').textContent = 'hPanel opened - download backup';
-
-          downloadStats.files += 1;
-        } else {
-          throw new Error(result.error || 'Failed to get backup URL');
-        }
-      } catch (error) {
-        // Fallback - open hPanel directly
-        const fallbackUrl = `https://hpanel.hostinger.com/websites/${site.domain}/files/backups`;
-        window.open(fallbackUrl, '_blank');
-
-        siteEl.classList.remove('downloading');
-        siteEl.classList.add('completed');
-        siteEl.querySelector('.site-progress-icon').textContent = '✅';
-        siteEl.querySelector('.site-progress-status').textContent = 'hPanel opened (fallback)';
-
-        downloadStats.files += 1;
-        console.log('Using fallback URL for', site.domain);
-      }
-
-      // Update stats
-      document.getElementById('statFiles').textContent = downloadStats.files;
-      document.getElementById('statSize').textContent = 'See hPanel';
-
-      // Small delay between opening tabs to avoid popup blocker
-      if (i < sitesToDownload.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    // Complete
-    clearInterval(timeInterval);
-    document.getElementById('overallProgressBar').style.width = '100%';
-    document.getElementById('overallProgressPercent').textContent = '100%';
-    document.getElementById('overallProgressText').textContent = 'All hPanel pages opened!';
-    document.getElementById('currentFileSection').classList.add('hidden');
-    document.getElementById('downloadCompleteActions').classList.remove('hidden');
-    document.getElementById('downloadCompleteActions').style.display = 'flex';
-
-    // Save download status
-    const migrationData = Utils.getStorage('migration_data') || {};
-    migrationData.downloadedSites = sitesToDownload.map(s => s.domain);
-    migrationData.downloadCompleted = true;
-    migrationData.downloadDate = new Date().toISOString();
-    migrationData.downloadStats = downloadStats;
-    Utils.setStorage('migration_data', migrationData);
-
-  } catch (error) {
-    clearInterval(timeInterval);
-    document.getElementById('overallProgressText').textContent = `Error: ${error.message}`;
-    document.getElementById('downloadCompleteActions').classList.remove('hidden');
-    document.getElementById('downloadCompleteActions').style.display = 'flex';
-  }
+  // Show modal
+  document.getElementById('downloadChecklistModal').classList.remove('hidden');
 }
 
 /**
- * Close download modal
+ * Mark item as opened (when link is clicked)
+ */
+function markAsOpened(domain, item) {
+  // Don't auto-check, just track that the link was opened
+  console.log(`Opened ${item} for ${domain}`);
+}
+
+/**
+ * Update checklist item state
+ */
+function updateChecklistItem(domain, item, checked) {
+  if (!checklistState[domain]) {
+    checklistState[domain] = {};
+  }
+  checklistState[domain][item] = checked;
+
+  // Save state
+  Utils.setStorage('migration_checklist', checklistState);
+
+  // Update UI
+  const domainKey = domain.replace(/\./g, '-');
+  const itemEl = document.querySelector(`#check-${domainKey}-${item}`).closest('.checklist-item');
+  if (itemEl) {
+    itemEl.classList.toggle('completed', checked);
+  }
+
+  // Update site status
+  const siteEl = document.querySelector(`.checklist-site[data-domain="${domain}"]`);
+  if (siteEl) {
+    const checkboxes = siteEl.querySelectorAll('input[type="checkbox"]');
+    const total = checkboxes.length;
+    const completed = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const statusEl = siteEl.querySelector('.checklist-site-status');
+    statusEl.textContent = `${completed}/${total}`;
+    statusEl.classList.toggle('complete', completed === total);
+  }
+
+  // Update overall progress
+  const selectedSiteData = Utils.getStorage('migration_selected_sites') || [];
+  updateChecklistProgress(selectedSiteData);
+}
+
+/**
+ * Update overall checklist progress
+ */
+function updateChecklistProgress(sitesToDownload) {
+  let totalItems = 0;
+  let completedItems = 0;
+
+  sitesToDownload.forEach(site => {
+    const siteState = checklistState[site.domain] || {};
+    const hasDb = site.stats?.databases > 0;
+    const hasEmails = site.stats?.emails > 0;
+
+    totalItems++; // Files
+    if (siteState.files) completedItems++;
+
+    if (hasDb) {
+      totalItems++;
+      if (siteState.database) completedItems++;
+    }
+    if (hasEmails) {
+      totalItems++;
+      if (siteState.emails) completedItems++;
+    }
+  });
+
+  const percent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  document.getElementById('checklistCompleted').textContent = completedItems;
+  document.getElementById('checklistTotal').textContent = totalItems;
+  document.getElementById('checklistPercent').textContent = `${percent}%`;
+  document.getElementById('checklistProgressBar').style.width = `${percent}%`;
+
+  // Save migration progress
+  const migrationData = Utils.getStorage('migration_data') || {};
+  migrationData.checklistProgress = { completed: completedItems, total: totalItems, percent };
+  migrationData.downloadCompleted = percent === 100;
+  Utils.setStorage('migration_data', migrationData);
+}
+
+/**
+ * Close checklist modal
+ */
+function closeChecklistModal() {
+  document.getElementById('downloadChecklistModal').classList.add('hidden');
+}
+
+/**
+ * Close download modal (legacy - now uses checklist)
  */
 function closeDownloadModal() {
-  document.getElementById('downloadModal').classList.add('hidden');
-  // Reset state
-  document.getElementById('currentFileSection').classList.remove('hidden');
-  document.getElementById('downloadCompleteActions').classList.add('hidden');
-  document.getElementById('overallProgressBar').style.width = '0%';
-  document.getElementById('overallProgressPercent').textContent = '0%';
+  closeChecklistModal();
 }
 
 /**
