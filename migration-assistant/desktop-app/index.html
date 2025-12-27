@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migration Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --bg-dark: #1a1a2e;
+      --bg-card: #16213e;
+      --bg-input: #0f3460;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0f23 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Title Bar */
+    .title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.3);
+      -webkit-app-region: drag;
+      padding: 0 12px;
+    }
+
+    .title-bar-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .title-bar-title span {
+      font-size: 18px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .window-btn:hover {
+      opacity: 0.8;
+    }
+
+    .btn-close { background: #ff5f57; }
+    .btn-minimize { background: #ffbd2e; }
+    .btn-maximize { background: #28c940; }
+
+    /* Main Content */
+    .main-content {
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Steps */
+    .steps-container {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    .step.active {
+      color: var(--primary);
+    }
+
+    .step.completed {
+      color: var(--success);
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-input);
+      border: 2px solid currentColor;
+    }
+
+    .step.active .step-number {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .step.completed .step-number {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title span {
+      font-size: 24px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Status Messages */
+    .status-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    .status-info {
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+
+    /* Site List */
+    .site-list {
+      max-height: 250px;
+      overflow-y: auto;
+      margin: 16px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .site-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .site-item:last-child {
+      border-bottom: none;
+    }
+
+    .site-item:hover {
+      background: var(--bg-input);
+    }
+
+    .site-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      accent-color: var(--primary);
+    }
+
+    .site-info {
+      flex: 1;
+    }
+
+    .site-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .site-path {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Progress */
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-input);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    /* Download Log */
+    .download-log {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      margin-top: 16px;
+    }
+
+    .log-entry {
+      padding: 4px 0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .log-entry.success { color: var(--success); }
+    .log-entry.error { color: var(--error); }
+    .log-entry.info { color: var(--text-secondary); }
+
+    /* Folder Selection */
+    .folder-select {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .folder-path {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .actions .btn {
+      flex: 1;
+    }
+
+    /* Hidden */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Select All */
+    .select-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .select-controls .btn {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+
+    /* Download Stats */
+    .download-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-input);
+      border-radius: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Current Download */
+    .current-download {
+      background: var(--bg-input);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .current-site {
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .current-file {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Bar -->
+  <div class="title-bar">
+    <div class="title-bar-title">
+      <span>🚀</span> Migration Assistant
+    </div>
+    <div class="window-controls">
+      <button class="window-btn btn-minimize" onclick="minimizeWindow()"></button>
+      <button class="window-btn btn-maximize" onclick="maximizeWindow()"></button>
+      <button class="window-btn btn-close" onclick="closeWindow()"></button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <div class="header">
+      <h1>Website Migration Assistant</h1>
+      <p>Download your Hostinger websites via FTP for migration</p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps-container">
+      <div class="step active" id="step1-indicator">
+        <div class="step-number">1</div>
+        <span>Connect</span>
+      </div>
+      <div class="step" id="step2-indicator">
+        <div class="step-number">2</div>
+        <span>Select Sites</span>
+      </div>
+      <div class="step" id="step3-indicator">
+        <div class="step-number">3</div>
+        <span>Download</span>
+      </div>
+    </div>
+
+    <!-- Step 1: FTP Connection -->
+    <div class="card" id="step1">
+      <div class="card-title">
+        <span>🔐</span> FTP Connection
+      </div>
+
+      <div id="connectionStatus"></div>
+
+      <div class="form-group">
+        <label class="form-label">FTP Host</label>
+        <input type="text" class="form-input" id="ftpHost" placeholder="e.g., 147.93.117.71 or ftp.yourdomain.com">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="ftpUser" placeholder="FTP username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Port</label>
+          <input type="number" class="form-input" id="ftpPort" value="21">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="ftpPassword" placeholder="FTP password">
+      </div>
+
+      <div class="status-message status-info">
+        <span>ℹ️</span>
+        Find FTP credentials in hPanel → Files → FTP Accounts
+      </div>
+
+      <button class="btn btn-primary btn-block" id="connectBtn" onclick="connectFTP()">
+        <span>🔌</span> Connect to FTP
+      </button>
+    </div>
+
+    <!-- Step 2: Select Sites -->
+    <div class="card hidden" id="step2">
+      <div class="card-title">
+        <span>🌐</span> Select Sites to Download
+      </div>
+
+      <div id="sitesStatus"></div>
+
+      <div class="select-controls">
+        <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
+        <button class="btn btn-secondary" onclick="deselectAll()">Deselect All</button>
+      </div>
+
+      <div class="site-list" id="siteList">
+        <!-- Sites will be populated here -->
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Download Location</label>
+        <div class="folder-select">
+          <div class="folder-path" id="outputPath">Select a folder...</div>
+          <button class="btn btn-secondary" onclick="selectOutputFolder()">📂 Browse</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary" id="startDownloadBtn" onclick="startDownload()" disabled>
+          <span>⬇️</span> Start Download
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Download Progress -->
+    <div class="card hidden" id="step3">
+      <div class="card-title">
+        <span>📦</span> Downloading Sites
+      </div>
+
+      <div class="current-download" id="currentDownload">
+        <div class="current-site">
+          <div class="spinner"></div>
+          <span id="currentSiteName">Preparing...</span>
+        </div>
+        <div class="current-file" id="currentFileName">Initializing...</div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-header">
+          <span id="progressText">0 / 0 files</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="download-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="statFiles">0</div>
+          <div class="stat-label">Files</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statSize">0 MB</div>
+          <div class="stat-label">Downloaded</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statSites">0/0</div>
+          <div class="stat-label">Sites</div>
+        </div>
+      </div>
+
+      <div class="download-log" id="downloadLog">
+        <!-- Log entries will appear here -->
+      </div>
+
+      <div class="actions" id="downloadActions">
+        <button class="btn btn-secondary" id="abortBtn" onclick="abortDownload()">
+          <span>⏹️</span> Abort
+        </button>
+      </div>
+
+      <div class="actions hidden" id="completeActions">
+        <button class="btn btn-secondary" onclick="openOutputFolder()">
+          <span>📂</span> Open Folder
+        </button>
+        <button class="btn btn-success" onclick="resetApp()">
+          <span>✓</span> Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const path = require('path');
+    const os = require('os');
+
+    // State
+    let ftpConfig = {};
+    let siteFolders = [];
+    let selectedSites = new Set();
+    let outputDir = path.join(os.homedir(), 'Desktop', 'migration-backups');
+
+    // Window Controls
+    function minimizeWindow() { ipcRenderer.send('minimize-window'); }
+    function maximizeWindow() { ipcRenderer.send('maximize-window'); }
+    function closeWindow() { ipcRenderer.send('close-window'); }
+
+    // Connect to FTP
+    async function connectFTP() {
+      const host = document.getElementById('ftpHost').value.trim();
+      const user = document.getElementById('ftpUser').value.trim();
+      const password = document.getElementById('ftpPassword').value;
+      const port = parseInt(document.getElementById('ftpPort').value) || 21;
+
+      if (!host || !user || !password) {
+        showStatus('connectionStatus', 'error', 'Please fill in all fields');
+        return;
+      }
+
+      ftpConfig = { host, username: user, password, port };
+
+      const btn = document.getElementById('connectBtn');
+      btn.innerHTML = '<div class="spinner"></div> Connecting...';
+      btn.disabled = true;
+
+      const result = await ipcRenderer.invoke('test-ftp', ftpConfig);
+
+      if (result.success) {
+        showStatus('connectionStatus', 'success', 'Connected successfully!');
+        await loadSiteFolders();
+      } else {
+        showStatus('connectionStatus', 'error', `Connection failed: ${result.error}`);
+        btn.innerHTML = '<span>🔌</span> Connect to FTP';
+        btn.disabled = false;
+      }
+    }
+
+    // Load site folders
+    async function loadSiteFolders() {
+      showStatus('sitesStatus', 'info', 'Scanning for site folders...');
+
+      const result = await ipcRenderer.invoke('list-site-folders', ftpConfig);
+
+      if (result.success && result.folders.length > 0) {
+        siteFolders = result.folders;
+        renderSiteList();
+        goToStep(2);
+      } else {
+        showStatus('connectionStatus', 'error', 'No site folders found. Check FTP path.');
+        document.getElementById('connectBtn').innerHTML = '<span>🔌</span> Connect to FTP';
+        document.getElementById('connectBtn').disabled = false;
+      }
+    }
+
+    // Render site list
+    function renderSiteList() {
+      const container = document.getElementById('siteList');
+      container.innerHTML = siteFolders.map((site, index) => `
+        <div class="site-item" onclick="toggleSite(${index})">
+          <input type="checkbox" class="site-checkbox" id="site-${index}"
+                 ${selectedSites.has(index) ? 'checked' : ''}>
+          <div class="site-info">
+            <div class="site-name">${site.name}</div>
+            <div class="site-path">${site.path}</div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('outputPath').textContent = outputDir;
+      showStatus('sitesStatus', 'info', `Found ${siteFolders.length} site folders`);
+    }
+
+    // Toggle site selection
+    function toggleSite(index) {
+      if (selectedSites.has(index)) {
+        selectedSites.delete(index);
+      } else {
+        selectedSites.add(index);
+      }
+      document.getElementById(`site-${index}`).checked = selectedSites.has(index);
+      updateDownloadButton();
+    }
+
+    function selectAll() {
+      siteFolders.forEach((_, i) => selectedSites.add(i));
+      renderSiteList();
+      updateDownloadButton();
+    }
+
+    function deselectAll() {
+      selectedSites.clear();
+      renderSiteList();
+      updateDownloadButton();
+    }
+
+    function updateDownloadButton() {
+      document.getElementById('startDownloadBtn').disabled = selectedSites.size === 0;
+    }
+
+    // Select output folder
+    async function selectOutputFolder() {
+      const dir = await ipcRenderer.invoke('select-directory');
+      if (dir) {
+        outputDir = dir;
+        document.getElementById('outputPath').textContent = dir;
+      }
+    }
+
+    // Start download
+    async function startDownload() {
+      goToStep(3);
+
+      const sites = Array.from(selectedSites).map(i => siteFolders[i]);
+      let completedSites = 0;
+      let totalFiles = 0;
+      let totalSize = 0;
+
+      for (const site of sites) {
+        document.getElementById('currentSiteName').textContent = site.name;
+        document.getElementById('statSites').textContent = `${completedSites}/${sites.length}`;
+
+        addLog('info', `Starting download: ${site.name}`);
+
+        const result = await ipcRenderer.invoke('download-site', {
+          ftpConfig,
+          sitePath: site.path,
+          siteName: site.name,
+          outputDir
+        });
+
+        if (result.success) {
+          totalFiles += result.downloadedFiles;
+          totalSize += result.downloadedSize;
+          completedSites++;
+          addLog('success', `✓ Completed: ${site.name} (${result.downloadedFiles} files)`);
+        } else {
+          addLog('error', `✗ Failed: ${site.name} - ${result.error}`);
+        }
+
+        document.getElementById('statFiles').textContent = totalFiles;
+        document.getElementById('statSize').textContent = formatBytes(totalSize);
+        document.getElementById('statSites').textContent = `${completedSites}/${sites.length}`;
+      }
+
+      // Complete
+      document.getElementById('currentDownload').innerHTML = `
+        <div class="current-site" style="color: var(--success);">
+          <span>✓</span>
+          <span>Download Complete!</span>
+        </div>
+      `;
+
+      document.getElementById('downloadActions').classList.add('hidden');
+      document.getElementById('completeActions').classList.remove('hidden');
+    }
+
+    // IPC event listeners for progress
+    ipcRenderer.on('download-status', (event, data) => {
+      document.getElementById('currentFileName').textContent = data.message;
+    });
+
+    ipcRenderer.on('download-file-complete', (event, data) => {
+      const percent = Math.round((data.downloadedFiles / data.totalFiles) * 100);
+      document.getElementById('progressText').textContent = `${data.downloadedFiles} / ${data.totalFiles} files`;
+      document.getElementById('progressPercent').textContent = `${percent}%`;
+      document.getElementById('progressFill').style.width = `${percent}%`;
+      document.getElementById('statFiles').textContent = data.downloadedFiles;
+      document.getElementById('statSize').textContent = formatBytes(data.downloadedSize);
+    });
+
+    ipcRenderer.on('download-progress', (event, data) => {
+      document.getElementById('currentFileName').textContent = data.file;
+    });
+
+    // Abort download
+    function abortDownload() {
+      ipcRenderer.send('abort-download');
+      addLog('error', 'Download aborted by user');
+      document.getElementById('downloadActions').classList.add('hidden');
+      document.getElementById('completeActions').classList.remove('hidden');
+    }
+
+    // Open output folder
+    function openOutputFolder() {
+      require('electron').shell.openPath(outputDir);
+    }
+
+    // Reset app
+    function resetApp() {
+      selectedSites.clear();
+      goToStep(1);
+      document.getElementById('connectBtn').innerHTML = '<span>🔌</span> Connect to FTP';
+      document.getElementById('connectBtn').disabled = false;
+      document.getElementById('connectionStatus').innerHTML = '';
+      document.getElementById('downloadLog').innerHTML = '';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('downloadActions').classList.remove('hidden');
+      document.getElementById('completeActions').classList.add('hidden');
+    }
+
+    // Go to step
+    function goToStep(step) {
+      ['step1', 'step2', 'step3'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        const indicator = document.getElementById(`${id}-indicator`);
+
+        if (i + 1 === step) {
+          el.classList.remove('hidden');
+          indicator.classList.add('active');
+          indicator.classList.remove('completed');
+        } else if (i + 1 < step) {
+          el.classList.add('hidden');
+          indicator.classList.remove('active');
+          indicator.classList.add('completed');
+        } else {
+          el.classList.add('hidden');
+          indicator.classList.remove('active', 'completed');
+        }
+      });
+    }
+
+    // Show status message
+    function showStatus(containerId, type, message) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <div class="status-message status-${type}">
+          <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ️'}</span>
+          ${message}
+        </div>
+      `;
+    }
+
+    // Add log entry
+    function addLog(type, message) {
+      const log = document.getElementById('downloadLog');
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `<div class="log-entry ${type}">[${time}] ${message}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Format bytes
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+  </script>
+</body>
+</html>

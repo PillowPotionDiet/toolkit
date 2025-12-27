@@ -458,21 +458,31 @@
         <button class="modal-close" onclick="closeChecklistModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- Option A: Script Generator -->
-        <div style="padding: 1.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); margin-bottom: 1.5rem; color: white;">
-          <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Option A: Automated Download Script</h3>
+        <!-- Option A: Desktop App (Recommended) -->
+        <div style="padding: 1.25rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-md); margin-bottom: 1rem; color: white;">
+          <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Option A: Desktop App (Recommended)</h3>
           <p style="margin: 0 0 1rem 0; opacity: 0.9; font-size: 0.9rem;">
-            Generate a PowerShell script that runs on your PC to download all files via FTP.
-            <strong>Recommended for 10+ sites.</strong>
+            Download our desktop app for the best experience - beautiful UI, auto-detect sites, progress tracking.
           </p>
-          <button class="btn" id="generateScriptBtn" onclick="showScriptGenerator()" style="background: white; color: #667eea; font-weight: 600;">
-            🔧 Generate Download Script
+          <a href="desktop-app/" class="btn" style="background: white; color: #667eea; font-weight: 600; text-decoration: none; display: inline-block;">
+            💻 Get Desktop App
+          </a>
+        </div>
+
+        <!-- Option B: PowerShell Script -->
+        <div style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 1rem;">
+          <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Option B: PowerShell Script</h3>
+          <p style="margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--text-secondary);">
+            Generate a script to run locally on your PC via FTP.
+          </p>
+          <button class="btn btn-outline btn-sm" onclick="showScriptGenerator()">
+            🔧 Generate Script
           </button>
         </div>
 
-        <!-- Option B: Manual Checklist -->
+        <!-- Option C: Manual Checklist -->
         <div style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 1rem;">
-          <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Option B: Manual Download (hPanel)</h3>
+          <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Option C: Manual Download (hPanel)</h3>
           <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">
             Click links to open hPanel pages. Check off items as you complete them.
           </p>

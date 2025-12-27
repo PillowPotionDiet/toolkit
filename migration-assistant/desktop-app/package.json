@@ -1,0 +1,40 @@
+{
+  "name": "migration-assistant",
+  "version": "1.0.0",
+  "description": "Website Migration Assistant - Download your Hostinger sites via FTP",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "author": "Migration Assistant",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "basic-ftp": "^5.0.4"
+  },
+  "build": {
+    "appId": "com.migration.assistant",
+    "productName": "Migration Assistant",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
