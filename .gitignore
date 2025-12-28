@@ -34,3 +34,7 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+
+# Electron desktop app build outputs (too large for git)
+migration-assistant/desktop-app/releases/
+migration-assistant/desktop-app/node_modules/
